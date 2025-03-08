@@ -2,7 +2,8 @@
 //import 'package:farm_hub/location_page.dart';
 // import 'package:farm_hub/location_page.dart';
 // import 'package:farm_hub/payment_successful_page.dart';
-import 'package:farm_hub/front_screen.dart';
+import 'package:farm_hub/consumer_farmer_login_page.dart';
+
 import 'package:flutter/material.dart';
 
 void main() {
@@ -15,7 +16,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
-      home: FrontScreen(),
+      home: ConsumerFarmerLoginPage(),
       debugShowCheckedModeBanner: false,
     );
   }
