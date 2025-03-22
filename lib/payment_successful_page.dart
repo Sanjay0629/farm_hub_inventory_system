@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'location_page.dart';
 
 class PaymentSuccessfulPage extends StatelessWidget {
   const PaymentSuccessfulPage({super.key});
@@ -23,6 +24,19 @@ class PaymentSuccessfulPage extends StatelessWidget {
             child: CircleAvatar(
               radius: 100,
               backgroundColor: Color.fromRGBO(235, 233, 109, 0.75),
+            ),
+          ),
+          Positioned(
+            top: 20,
+            left: 20,
+            child: IconButton(
+              icon: Icon(Icons.arrow_back, color: Colors.black, size: 30),
+              onPressed: () {
+                Navigator.pop(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LocationPage()),
+                );
+              },
             ),
           ),
           Positioned(

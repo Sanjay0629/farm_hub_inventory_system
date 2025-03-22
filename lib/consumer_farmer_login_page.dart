@@ -41,21 +41,7 @@ class ConsumerFarmerLoginPage extends StatelessWidget {
               backgroundColor: Color(0xBFEAE86C),
             ),
           ),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Center(
-                child: CircleAvatar(
-                  radius: 150,
-                  backgroundImage: AssetImage("assets/images/consumer.png"),
-                ),
-              ),
-              Center(
-                child: CircleAvatar(
-                  radius: 150,
-                  backgroundImage: AssetImage("assets/images/consumer.png"),
-                ),
-              ),
+          Column(mainAxisAlignment: MainAxisAlignment.center, children: [
             ],
           ),
         ],

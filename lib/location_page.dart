@@ -10,6 +10,7 @@ class LocationPage extends StatelessWidget {
       backgroundColor: Colors.white,
       body: Stack(
         children: [
+          // Top circles
           Positioned(
             top: -68,
             right: -87,
@@ -26,6 +27,20 @@ class LocationPage extends StatelessWidget {
               backgroundColor: Color.fromRGBO(235, 233, 109, 0.75),
             ),
           ),
+
+          // Back button inside the top circle
+          Positioned(
+            top: 20,
+            left: 20,
+            child: IconButton(
+              icon: Icon(Icons.arrow_back, color: Colors.black, size: 30),
+              onPressed: () {
+                Navigator.pop(context);
+              },
+            ),
+          ),
+
+          // Bottom circles
           Positioned(
             right: 143,
             top: 814,
@@ -42,12 +57,13 @@ class LocationPage extends StatelessWidget {
               backgroundColor: Color(0xBFEAE86C),
             ),
           ),
+
+          // Main content
           Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Center(child: Image.asset("assets/images/map.png", width: 250)),
               const SizedBox(height: 30),
-
               ElevatedButton(
                 onPressed: () {
                   Navigator.push(
