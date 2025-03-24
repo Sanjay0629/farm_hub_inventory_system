@@ -1,8 +1,12 @@
+import 'package:farm_hub/payment_successful_page.dart';
 import 'package:flutter/material.dart';
 import 'cart_data.dart'; // Import the cart data file
 
 class CartPage extends StatefulWidget {
+  const CartPage({super.key});
+
   @override
+  // ignore: library_private_types_in_public_api
   _CartPageState createState() => _CartPageState();
 }
 
@@ -40,9 +44,10 @@ class _CartPageState extends State<CartPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Color(0xFFA9E06E),
       appBar: AppBar(
         title: Text("My Cart", style: TextStyle(fontFamily: "Fredoka")),
-        backgroundColor: Colors.green,
+        backgroundColor: Color(0xFFA9E06E),
         centerTitle: true,
       ),
       body:
@@ -173,10 +178,10 @@ class _CartPageState extends State<CartPage> {
                         SizedBox(height: 10),
                         ElevatedButton(
                           onPressed: () {
-                            // TODO: Implement checkout functionality
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text("Proceeding to Checkout..."),
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => PaymentSuccessfulPage(),
                               ),
                             );
                           },

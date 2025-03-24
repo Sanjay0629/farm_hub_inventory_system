@@ -1,12 +1,17 @@
+import 'package:farm_hub/cart_page.dart';
+// import 'package:farm_hub/get_location.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'global_variables.dart';
+import 'buyingpage.dart';
+import 'location_page.dart';
 
 class BrowseFarmsPage extends StatefulWidget {
   const BrowseFarmsPage({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _BrowseFarmsPageState createState() => _BrowseFarmsPageState();
 }
 
@@ -84,12 +89,22 @@ class _BrowseFarmsPageState extends State<BrowseFarmsPage> {
         centerTitle: true,
         backgroundColor: Color(0xFFA8DF6E),
         leading: IconButton(
-          onPressed: () {},
-          icon: Icon(Icons.menu, color: Colors.black),
+          onPressed: () {
+            Navigator.pop(
+              context,
+              MaterialPageRoute(builder: (context) => const LocationPage()),
+            );
+          },
+          icon: Icon(Icons.arrow_back, color: Colors.black),
         ),
         actions: [
           IconButton(
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => CartPage()),
+              );
+            },
             icon: Icon(Icons.shopping_cart, color: Colors.black),
           ),
         ],
@@ -198,7 +213,7 @@ class _BrowseFarmsPageState extends State<BrowseFarmsPage> {
                       "Near You",
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
-                    Text("Thandalam", style: const TextStyle(fontSize: 12)),
+                    Text(currentLocation, style: const TextStyle(fontSize: 12)),
                   ],
                 ),
               ],
@@ -216,10 +231,10 @@ class _BrowseFarmsPageState extends State<BrowseFarmsPage> {
               child: GridView.builder(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2, // Change to 3 if needed
+                  crossAxisCount: 2,
                   crossAxisSpacing: 10,
                   mainAxisSpacing: 10,
-                  childAspectRatio: 0.7, // Adjust for full screen coverage
+                  childAspectRatio: 0.7,
                 ),
                 itemCount: farms.length,
                 itemBuilder: (context, index) {
@@ -249,7 +264,18 @@ class FarmCard extends StatelessWidget {
       padding: const EdgeInsets.all(10),
       child: Column(
         children: [
-          CircleAvatar(radius: 50, backgroundImage: AssetImage(farm["image"]!)),
+          GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => BuyingPage()),
+              );
+            },
+            child: CircleAvatar(
+              radius: 50,
+              backgroundImage: AssetImage(farm["image"]!),
+            ),
+          ),
           const SizedBox(height: 10),
           Text(
             farm["name"]!,

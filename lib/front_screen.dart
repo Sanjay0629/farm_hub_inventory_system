@@ -1,4 +1,5 @@
-import 'package:farm_hub/location_page.dart';
+// import 'package:farm_hub/location_page.dart';
+import 'package:farm_hub/selection_page.dart';
 import 'package:flutter/material.dart';
 //import 'package:farm_hub/consumer_farmer_page.dart';
 
@@ -21,9 +22,7 @@ class FrontScreen extends StatelessWidget {
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(
-                      builder: (context) => const LocationPage(),
-                    ),
+                    MaterialPageRoute(builder: (context) => SelectionPage()),
                   );
                 },
                 style: ElevatedButton.styleFrom(

@@ -210,11 +210,13 @@
 //   }
 // }
 
+import 'package:farm_hub/browse_farm_page.dart';
 import 'package:flutter/material.dart';
 import 'cart_data.dart'; // Import the cart data file
 import 'cart_page.dart'; // Import CartPage for navigation
 
 class BuyingPage extends StatelessWidget {
+  const BuyingPage({super.key});
   void addToCart(String image, String title, String description, String price) {
     bool itemExists = false;
 
@@ -269,9 +271,14 @@ class BuyingPage extends StatelessWidget {
                         top: 40,
                         left: 10,
                         child: IconButton(
-                          icon: Icon(Icons.arrow_back, color: Colors.white),
+                          icon: Icon(Icons.arrow_back, color: Colors.black),
                           onPressed: () {
-                            Navigator.pop(context);
+                            Navigator.pop(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const BrowseFarmsPage(),
+                              ),
+                            );
                           },
                         ),
                       ),
@@ -332,7 +339,6 @@ class BuyingPage extends StatelessWidget {
             ),
           ),
 
-          /// 🔹 **Go to Cart Button Below Products**
           Container(
             width: double.infinity,
             padding: EdgeInsets.symmetric(vertical: 16, horizontal: 20),
@@ -349,13 +355,13 @@ class BuyingPage extends StatelessWidget {
                   MaterialPageRoute(builder: (context) => CartPage()),
                 );
               },
-              icon: Icon(Icons.shopping_cart),
+              icon: Icon(Icons.shopping_cart, color: Colors.black),
               label: Text(
                 "Go to Cart",
                 style: TextStyle(
                   fontSize: 18,
                   fontFamily: "Fredoka",
-                  fontWeight: FontWeight.bold,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
               style: ElevatedButton.styleFrom(
@@ -374,7 +380,6 @@ class BuyingPage extends StatelessWidget {
   }
 }
 
-/// 📌 **ProductCard Widget**
 class ProductCard extends StatelessWidget {
   final String image;
   final String title;

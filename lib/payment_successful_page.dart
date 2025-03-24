@@ -1,3 +1,4 @@
+import 'package:farm_hub/browse_farm_page.dart';
 import 'package:flutter/material.dart';
 import 'location_page.dart';
 
@@ -98,7 +99,12 @@ class PaymentSuccessfulPage extends StatelessWidget {
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () {
-                      debugPrint("hi");
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => BrowseFarmsPage(),
+                        ),
+                      );
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Color.fromRGBO(235, 233, 109, 0.75),
@@ -115,7 +121,7 @@ class PaymentSuccessfulPage extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          "Track Your Order",
+                          "Return to Home Page",
                           style: TextStyle(
                             fontSize: 20,
                             fontFamily: "Fredoka",
@@ -123,7 +129,7 @@ class PaymentSuccessfulPage extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 10),
-                        Icon(Icons.delivery_dining, size: 30),
+                        Icon(Icons.home, size: 30),
                       ],
                     ),
                   ),

@@ -3,7 +3,10 @@ import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 
 class GetLocation extends StatefulWidget {
+  const GetLocation({super.key});
+
   @override
+  // ignore: library_private_types_in_public_api
   _GetLocationState createState() => _GetLocationState();
 }
 
