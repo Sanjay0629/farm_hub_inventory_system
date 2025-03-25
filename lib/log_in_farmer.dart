@@ -1,16 +1,17 @@
 import 'package:farm_hub/location_page.dart';
+import 'package:farm_hub/selection_page.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'sign_in.dart';
+import 'sign_in_farmer.dart';
 
-class LogIn extends StatefulWidget {
-  const LogIn({super.key});
+class LogInFarmer extends StatefulWidget {
+  const LogInFarmer({super.key});
 
   @override
-  _LogIn createState() => _LogIn();
+  _LogInFarmer createState() => _LogInFarmer();
 }
 
-class _LogIn extends State<LogIn> {
+class _LogInFarmer extends State<LogInFarmer> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -86,11 +87,14 @@ class _LogIn extends State<LogIn> {
               child: IconButton(
                 icon: const Icon(
                   Icons.arrow_back,
-                  size: 28,
+                  size: 20,
                   color: Colors.black,
                 ),
                 onPressed: () {
-                  Navigator.pop(context);
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (context) => SelectionPage()),
+                  );
                 },
               ),
             ),
@@ -265,7 +269,7 @@ class _LogIn extends State<LogIn> {
                               Navigator.pushReplacement(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => const SignIn(),
+                                  builder: (context) => const SignInFarmer(),
                                 ),
                               );
                             },
@@ -280,48 +284,3 @@ class _LogIn extends State<LogIn> {
     );
   }
 }
-// import 'package:flutter/material.dart';
-
-// class LoginPage extends StatefulWidget {
-//   final String userType;
-
-//   LoginPage({required this.userType});
-
-//   @override
-//   _LoginPageState createState() => _LoginPageState();
-// }
-
-// class _LoginPageState extends State<LoginPage> {
-//   final TextEditingController emailController = TextEditingController();
-//   final TextEditingController passwordController = TextEditingController();
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(title: Text('Login as ${widget.userType}')),
-//       body: Padding(
-//         padding: EdgeInsets.all(16.0),
-//         child: Column(
-//           children: [
-//             TextField(
-//               controller: emailController,
-//               decoration: InputDecoration(labelText: 'Email'),
-//             ),
-//             TextField(
-//               controller: passwordController,
-//               decoration: InputDecoration(labelText: 'Password'),
-//               obscureText: true,
-//             ),
-//             SizedBox(height: 20),
-//             ElevatedButton(
-//               onPressed: () {
-//                 // Implement login logic here
-//               },
-//               child: Text('Login'),
-//             ),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-// }

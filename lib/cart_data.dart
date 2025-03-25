@@ -1,4 +1,4 @@
 // cart_data.dart
-library cart_data;
+library;
 
 List<Map<String, String>> cartItems = [];

@@ -1,5 +1,6 @@
 import 'package:farm_hub/log_in.dart';
 import 'package:flutter/material.dart';
+import 'log_in_farmer.dart';
 
 class SelectionPage extends StatelessWidget {
   const SelectionPage({super.key});
@@ -97,10 +98,20 @@ class SelectionPage extends StatelessWidget {
                           color: Color(0xBFA8DF6E), // Green background
                         ),
                         padding: EdgeInsets.all(10),
-                        child: CircleAvatar(
-                          radius: 60,
-                          backgroundImage: AssetImage(
-                            'assets/images/farmer.png',
+                        child: GestureDetector(
+                          onTap: () {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const LogInFarmer(),
+                              ),
+                            );
+                          },
+                          child: CircleAvatar(
+                            radius: 60,
+                            backgroundImage: AssetImage(
+                              'assets/images/farmer.png',
+                            ),
                           ),
                         ),
                       ),
@@ -124,3 +135,67 @@ class SelectionPage extends StatelessWidget {
     );
   }
 }
+// import 'package:flutter/material.dart';
+// import 'log_in.dart';
+// import 'sign_in.dart';
+// import 'sign_in_farmer.dart';
+
+// class SelectionPage extends StatelessWidget {
+//   const SelectionPage({super.key});
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(title: Text('Select User Type')),
+//       body: Center(
+//         child: Column(
+//           mainAxisAlignment: MainAxisAlignment.center,
+//           children: [
+//             ElevatedButton(
+//               onPressed: () {
+//                 Navigator.push(
+//                   context,
+//                   MaterialPageRoute(
+//                     builder: (context) => LoginPage(userType: 'Consumer'),
+//                   ),
+//                 );
+//               },
+//               child: Text('Login as Consumer'),
+//             ),
+//             ElevatedButton(
+//               onPressed: () {
+//                 Navigator.push(
+//                   context,
+//                   MaterialPageRoute(
+//                     builder: (context) => LoginPage(userType: 'Farmer'),
+//                   ),
+//                 );
+//               },
+//               child: Text('Login as Farmer'),
+//             ),
+//             SizedBox(height: 20),
+//             Text('Or Sign Up as'),
+//             ElevatedButton(
+//               onPressed: () {
+//                 Navigator.push(
+//                   context,
+//                   MaterialPageRoute(builder: (context) => SignUpConsumer()),
+//                 );
+//               },
+//               child: Text('Sign Up as Consumer'),
+//             ),
+//             ElevatedButton(
+//               onPressed: () {
+//                 Navigator.push(
+//                   context,
+//                   MaterialPageRoute(builder: (context) => SignUpFarmer()),
+//                 );
+//               },
+//               child: Text('Sign Up as Farmer'),
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+// }
