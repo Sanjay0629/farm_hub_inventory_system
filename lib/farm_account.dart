@@ -1,163 +1,209 @@
+import 'package:farm_hub/farmer_profile.dart';
+import 'package:farm_hub/inventory_screen.dart';
+import 'package:farm_hub/selection_page.dart';
 import 'package:flutter/material.dart';
 
-class FarmerAccountPage extends StatelessWidget {
-  const FarmerAccountPage({super.key});
+class FarmAccount extends StatelessWidget {
+  const FarmAccount({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
+      body: Stack(
+        children: [
+          Positioned(
+            left: -68,
+            top: -87,
+            child: CircleAvatar(
+              radius: 130,
+              backgroundColor: const Color(0xBFA8DF6E),
+            ),
+          ),
+          Positioned(
+            left: -68,
+            top: 119,
+            child: CircleAvatar(
+              radius: 80,
+              backgroundColor: const Color(0xBFEAE86C),
+            ),
+          ),
+          Positioned(
+            left: 143,
+            top: 814,
+            child: CircleAvatar(
+              radius: 104,
+              backgroundColor: const Color(0xBFA8DF6E),
+            ),
+          ),
+          Positioned(
+            left: 275,
+            top: 670,
+            child: CircleAvatar(
+              radius: 130,
+              backgroundColor: const Color(0xBFEAE86C),
+            ),
+          ),
+          Column(
             children: [
-              // Top Section
-              Stack(
+              const SizedBox(height: 25),
+              const Center(
+                child: Text(
+                  "Nike Farm",
+                  style: TextStyle(
+                    fontFamily: "Fredoka",
+                    fontWeight: FontWeight.w500,
+                    fontSize: 40,
+                  ),
+                ),
+              ),
+              const Center(
+                child: Text(
+                  "Richie Street",
+                  style: TextStyle(
+                    fontFamily: "Fredoka",
+                    fontSize: 20,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.grey,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 15),
+              const CircleAvatar(
+                radius: 65,
+                backgroundImage: AssetImage("assets/images/farmer1.png"),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(5, (index) {
+                  return Icon(
+                    index < 4 ? Icons.star : Icons.star_half,
+                    color: Colors.orange,
+                    size: 20,
+                  );
+                }),
+              ),
+              const SizedBox(height: 15),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Container(
-                    height: 220,
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.only(
-                        bottomLeft: Radius.circular(50),
-                        bottomRight: Radius.circular(50),
+                  Column(
+                    children: const [
+                      Text(
+                        "Orders",
+                        style: TextStyle(
+                          fontWeight: FontWeight.w500,
+                          fontFamily: "Fredoka",
+                          fontSize: 24,
+                        ),
                       ),
-                    ),
+                      SizedBox(height: 2),
+                      Text(
+                        "50",
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontFamily: "Fredoka",
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                    ],
                   ),
-                  Positioned(
-                    top: -30,
-                    left: -30,
-                    child: CircleAvatar(
-                      radius: 70,
-                      backgroundColor: Colors.green.shade100,
-                    ),
-                  ),
-                  Positioned(
-                    top: 30,
-                    left: -10,
-                    child: CircleAvatar(
-                      radius: 50,
-                      backgroundColor: Colors.green.shade200,
-                    ),
+                  Container(
+                    height: 80,
+                    width: 2,
+                    color: Colors.grey,
+                    margin: const EdgeInsets.symmetric(horizontal: 20),
                   ),
                   Column(
-                    children: [
-                      const SizedBox(height: 30),
-                      const Text(
-                        "Nike’s Farm",
+                    children: const [
+                      Text(
+                        "Payment",
                         style: TextStyle(
                           fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
+                          fontFamily: "Fredoka",
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
-                      const Text(
-                        "Richie street",
-                        style: TextStyle(fontSize: 14, color: Colors.grey),
-                      ),
-                      const SizedBox(height: 10),
-                      CircleAvatar(
-                        radius: 40,
-                        backgroundColor: Colors.grey[300],
-                        child: Image.asset(
-                          "assets/images/farmer1.png", // Add your image to assets
-                          fit: BoxFit.cover,
-                          width: 70,
+                      SizedBox(height: 2),
+                      Text(
+                        "₹3000",
+                        style: TextStyle(
+                          fontFamily: "Fredoka",
+                          fontSize: 20,
+                          fontWeight: FontWeight.w400,
                         ),
-                      ),
-                      const SizedBox(height: 5),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: List.generate(5, (index) {
-                          return Icon(
-                            index == 4 ? Icons.star_border : Icons.star,
-                            color: index == 4 ? Colors.grey : Colors.orange,
-                          );
-                        }),
-                      ),
-                      const SizedBox(height: 15),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Column(
-                            children: const [
-                              Text(
-                                "Orders",
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              SizedBox(height: 5),
-                              Text("50", style: TextStyle(fontSize: 18)),
-                            ],
-                          ),
-                          Container(
-                            margin: const EdgeInsets.symmetric(horizontal: 30),
-                            height: 40,
-                            width: 2,
-                            color: Colors.black26,
-                          ),
-                          Column(
-                            children: const [
-                              Text(
-                                "Payment",
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              SizedBox(height: 5),
-                              Text("₹3000", style: TextStyle(fontSize: 18)),
-                            ],
-                          ),
-                        ],
                       ),
                     ],
                   ),
                 ],
               ),
-
               const SizedBox(height: 20),
 
-              // Menu Section
+              // The Container for My Profile, Inventory, Payment Details, etc.
               Container(
                 margin: const EdgeInsets.symmetric(horizontal: 20),
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 decoration: BoxDecoration(
-                  color: Colors.green.shade200,
+                  color: const Color(0xFFB4E197), // Light green background
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Column(
                   children: [
-                    menuItem(Icons.person, "My Profile"),
-                    menuItem(Icons.shopping_cart, "Inventory"),
-                    menuItem(Icons.payment, "Payment Details"),
-                    menuItem(Icons.update, "Update Item"),
-                    menuItem(Icons.logout, "Logout"),
+                    _buildMenuItem(Icons.person, "My Profile", context),
+                    _buildMenuItem(Icons.shopping_cart, "Inventory", context),
+                    _buildMenuItem(Icons.payment, "Payment Details", context),
+                    _buildMenuItem(Icons.logout, "Logout", context),
                   ],
                 ),
               ),
             ],
           ),
-        ),
+        ],
       ),
     );
   }
 
-  Widget menuItem(IconData icon, String title) {
+  Widget _buildMenuItem(IconData icon, String title, BuildContext context) {
     return Column(
       children: [
         ListTile(
           leading: Icon(icon, color: Colors.black),
           title: Text(
             title,
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              fontWeight: FontWeight.w400,
+              fontFamily: "Fredoka",
+              fontSize: 20,
+            ),
           ),
-          trailing: const Icon(Icons.arrow_forward_ios, color: Colors.black),
-          onTap: () {},
+          trailing: IconButton(
+            onPressed: () {
+              if (title == "My Profile") {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => FarmerProfile()),
+                );
+              } else if (title == "Inventory") {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => InventoryScreen()),
+                );
+              } else if (title == "Payment Details") {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => InventoryScreen()),
+                );
+              } else if (title == "Logout") {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => SelectionPage()),
+                );
+              }
+            },
+            icon: const Icon(Icons.arrow_forward_ios),
+          ),
         ),
-        if (title != "Logout") Divider(color: Colors.black26, thickness: 0.5),
+        if (title != "Logout") const Divider(height: 1, color: Colors.black26),
       ],
     );
   }

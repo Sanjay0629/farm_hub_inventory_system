@@ -1,3 +1,4 @@
+import 'package:farm_hub/farmer_profile.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -56,7 +57,7 @@ class _LogInFarmer extends State<LogInFarmer> {
 
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const LocationPage()),
+        MaterialPageRoute(builder: (context) => FarmerProfile()),
       );
     } on FirebaseAuthException catch (e) {
       setState(() {
