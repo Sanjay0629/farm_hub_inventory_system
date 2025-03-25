@@ -1,6 +1,7 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:farm_hub/log_in.dart';
 import 'package:farm_hub/selection_page.dart';
-import 'package:flutter/material.dart';
 
 class SignIn extends StatefulWidget {
   const SignIn({super.key});
@@ -27,7 +28,8 @@ class _SignInState extends State<SignIn> {
     );
   }
 
-  void _validateFields() {
+  // Function to handle Firebase Sign Up
+  void _signUp() async {
     setState(() {
       _nameError = _nameController.text.isEmpty ? "Name is required" : null;
       _emailError = _validateEmail(_emailController.text);
@@ -35,17 +37,36 @@ class _SignInState extends State<SignIn> {
     });
 
     if (_nameError == null && _emailError == null && _passwordError == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Sign Up Successful")));
-
-      // Redirect to LogIn page after 1 second
-      Future.delayed(const Duration(seconds: 1), () {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const LogIn()),
+      try {
+        // Create user with Firebase Authentication
+        await FirebaseAuth.instance.createUserWithEmailAndPassword(
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim(),
         );
-      });
+
+        // Show success message
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text("Sign Up Successful")));
+
+        // Navigate to Log In page
+        Future.delayed(const Duration(seconds: 1), () {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const LogIn()),
+          );
+        });
+      } on FirebaseAuthException catch (e) {
+        String errorMessage = "Sign up failed";
+        if (e.code == 'email-already-in-use') {
+          errorMessage = "Email is already in use";
+        } else if (e.code == 'weak-password') {
+          errorMessage = "Password must be at least 6 characters";
+        }
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(errorMessage)));
+      }
     }
   }
 
@@ -154,7 +175,7 @@ class _SignInState extends State<SignIn> {
                           horizontal: 100,
                         ),
                       ),
-                      onPressed: _validateFields,
+                      onPressed: _signUp,
                       child: const Text(
                         "SIGN IN",
                         style: TextStyle(
@@ -256,44 +277,3 @@ class _SignInState extends State<SignIn> {
     );
   }
 }
-// import 'package:flutter/material.dart';
-
-// class SignUpConsumer extends StatelessWidget {
-//   final TextEditingController nameController = TextEditingController();
-//   final TextEditingController emailController = TextEditingController();
-//   final TextEditingController passwordController = TextEditingController();
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(title: Text('Sign Up as Consumer')),
-//       body: Padding(
-//         padding: EdgeInsets.all(16.0),
-//         child: Column(
-//           children: [
-//             TextField(
-//               controller: nameController,
-//               decoration: InputDecoration(labelText: 'Full Name'),
-//             ),
-//             TextField(
-//               controller: emailController,
-//               decoration: InputDecoration(labelText: 'Email'),
-//             ),
-//             TextField(
-//               controller: passwordController,
-//               decoration: InputDecoration(labelText: 'Password'),
-//               obscureText: true,
-//             ),
-//             SizedBox(height: 20),
-//             ElevatedButton(
-//               onPressed: () {
-//                 // Implement sign-up logic here
-//               },
-//               child: Text('Sign Up'),
-//             ),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-// }

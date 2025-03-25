@@ -1,8 +1,9 @@
-import 'package:farm_hub/location_page.dart';
-import 'package:farm_hub/selection_page.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'sign_in_farmer.dart';
+import 'selection_page.dart';
+import 'location_page.dart';
 
 class LogInFarmer extends StatefulWidget {
   const LogInFarmer({super.key});
@@ -13,28 +14,21 @@ class LogInFarmer extends StatefulWidget {
 
 class _LogInFarmer extends State<LogInFarmer> {
   final _formKey = GlobalKey<FormState>();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _obscurePassword = true;
   String? _emailError;
   String? _passwordError;
+  bool _isLoading = false; // Loading indicator
 
   @override
   void initState() {
     super.initState();
-
-    // Remove error message when user starts typing
-    _emailController.addListener(() {
-      setState(() {
-        _emailError = null;
-      });
-    });
-
-    _passwordController.addListener(() {
-      setState(() {
-        _passwordError = null;
-      });
-    });
+    _emailController.addListener(() => setState(() => _emailError = null));
+    _passwordController.addListener(
+      () => setState(() => _passwordError = null),
+    );
   }
 
   void _validateFields() {
@@ -44,18 +38,41 @@ class _LogInFarmer extends State<LogInFarmer> {
     });
 
     if (_emailError == null && _passwordError == null) {
-      // Navigate to next page if no validation errors
-      _navigateToNextPage();
+      _signIn();
     }
   }
 
-  void _navigateToNextPage() {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const LocationPage(),
-      ), // Replace with your actual page
-    );
+  Future<void> _signIn() async {
+    setState(() => _isLoading = true);
+    try {
+      await _auth.signInWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Login Successful!")));
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const LocationPage()),
+      );
+    } on FirebaseAuthException catch (e) {
+      setState(() {
+        if (e.code == 'user-not-found') {
+          _emailError = "No user found for this email.";
+        } else if (e.code == 'wrong-password') {
+          _passwordError = "Incorrect password.";
+        } else {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text("Login failed")));
+        }
+      });
+    } finally {
+      setState(() => _isLoading = false);
+    }
   }
 
   String? _validateEmail(String value) {
@@ -63,23 +80,20 @@ class _LogInFarmer extends State<LogInFarmer> {
     final emailRegExp = RegExp(
       r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$",
     );
-    if (!emailRegExp.hasMatch(value)) return "Enter a valid email";
-    return null;
+    return emailRegExp.hasMatch(value) ? null : "Enter a valid email";
   }
 
   String? _validatePassword(String value) {
     if (value.isEmpty) return "Password is required";
-    if (value.length < 6) return "Password must be at least 6 characters";
-    return null;
+    return value.length < 6 ? "Password must be at least 6 characters" : null;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFA7E063), // Light green background
+      backgroundColor: const Color(0xFFA7E063),
       body: Column(
         children: [
-          // Back Button
           Padding(
             padding: const EdgeInsets.only(top: 40, left: 20),
             child: Align(
@@ -99,7 +113,6 @@ class _LogInFarmer extends State<LogInFarmer> {
               ),
             ),
           ),
-
           Expanded(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 30),
@@ -139,7 +152,6 @@ class _LogInFarmer extends State<LogInFarmer> {
                       ),
                     ),
 
-                    // Email Error Message
                     if (_emailError != null)
                       Padding(
                         padding: const EdgeInsets.only(top: 5, left: 5),
@@ -157,7 +169,7 @@ class _LogInFarmer extends State<LogInFarmer> {
                       ),
                     const SizedBox(height: 10),
 
-                    // Password Field with Visibility Toggle
+                    // Password Field
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 15),
                       decoration: BoxDecoration(
@@ -181,17 +193,15 @@ class _LogInFarmer extends State<LogInFarmer> {
                                   : Icons.visibility,
                               color: Colors.grey,
                             ),
-                            onPressed: () {
-                              setState(() {
-                                _obscurePassword = !_obscurePassword;
-                              });
-                            },
+                            onPressed:
+                                () => setState(
+                                  () => _obscurePassword = !_obscurePassword,
+                                ),
                           ),
                         ),
                       ),
                     ),
 
-                    // Password Error Message
                     if (_passwordError != null)
                       Padding(
                         padding: const EdgeInsets.only(top: 5, left: 5),
@@ -207,15 +217,12 @@ class _LogInFarmer extends State<LogInFarmer> {
                           ),
                         ),
                       ),
-
                     const SizedBox(height: 20),
 
                     // Login Button
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(
-                          0xFF3B5D36,
-                        ), // Dark green button
+                        backgroundColor: const Color(0xFF3B5D36),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
@@ -224,22 +231,26 @@ class _LogInFarmer extends State<LogInFarmer> {
                           horizontal: 100,
                         ),
                       ),
-                      onPressed: _validateFields,
-                      child: const Text(
-                        "LOG IN",
-                        style: TextStyle(
-                          fontFamily: 'Fredoka',
-                          fontSize: 18,
-                          color: Colors.white,
-                        ),
-                      ),
+                      onPressed: _isLoading ? null : _validateFields,
+                      child:
+                          _isLoading
+                              ? const CircularProgressIndicator(
+                                color: Colors.white,
+                              )
+                              : const Text(
+                                "LOG IN",
+                                style: TextStyle(
+                                  fontFamily: 'Fredoka',
+                                  fontSize: 18,
+                                  color: Colors.white,
+                                ),
+                              ),
                     ),
                   ],
                 ),
               ),
             ),
           ),
-
           Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 20),

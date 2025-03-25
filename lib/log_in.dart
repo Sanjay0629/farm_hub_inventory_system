@@ -1,4 +1,5 @@
 import 'package:farm_hub/location_page.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'sign_in.dart';
@@ -17,6 +18,7 @@ class _LogIn extends State<LogIn> {
   bool _obscurePassword = true;
   String? _emailError;
   String? _passwordError;
+  bool _isLoading = false; // Loading indicator
 
   @override
   void initState() {
@@ -36,6 +38,38 @@ class _LogIn extends State<LogIn> {
     });
   }
 
+  // 🔹 Firebase Login Function
+  Future<void> _loginUser() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
+
+      // 🔹 Navigate to the next page if login is successful
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const LocationPage()),
+      );
+    } on FirebaseAuthException catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+
+      if (e.code == 'user-not-found') {
+        _emailError = "No user found for this email.";
+      } else if (e.code == 'wrong-password') {
+        _passwordError = "Incorrect password.";
+      } else {
+        _emailError = "Login failed. Please try again.";
+      }
+    }
+  }
+
   void _validateFields() {
     setState(() {
       _emailError = _validateEmail(_emailController.text);
@@ -43,18 +77,8 @@ class _LogIn extends State<LogIn> {
     });
 
     if (_emailError == null && _passwordError == null) {
-      // Navigate to next page if no validation errors
-      _navigateToNextPage();
+      _loginUser(); // Call Firebase login
     }
-  }
-
-  void _navigateToNextPage() {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const LocationPage(),
-      ), // Replace with your actual page
-    );
   }
 
   String? _validateEmail(String value) {
@@ -209,9 +233,7 @@ class _LogIn extends State<LogIn> {
                     // Login Button
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(
-                          0xFF3B5D36,
-                        ), // Dark green button
+                        backgroundColor: const Color(0xFF3B5D36),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
@@ -220,15 +242,20 @@ class _LogIn extends State<LogIn> {
                           horizontal: 100,
                         ),
                       ),
-                      onPressed: _validateFields,
-                      child: const Text(
-                        "LOG IN",
-                        style: TextStyle(
-                          fontFamily: 'Fredoka',
-                          fontSize: 18,
-                          color: Colors.white,
-                        ),
-                      ),
+                      onPressed: _isLoading ? null : _validateFields,
+                      child:
+                          _isLoading
+                              ? const CircularProgressIndicator(
+                                color: Colors.white,
+                              )
+                              : const Text(
+                                "LOG IN",
+                                style: TextStyle(
+                                  fontFamily: 'Fredoka',
+                                  fontSize: 18,
+                                  color: Colors.white,
+                                ),
+                              ),
                     ),
                   ],
                 ),
@@ -280,48 +307,3 @@ class _LogIn extends State<LogIn> {
     );
   }
 }
-// import 'package:flutter/material.dart';
-
-// class LoginPage extends StatefulWidget {
-//   final String userType;
-
-//   LoginPage({required this.userType});
-
-//   @override
-//   _LoginPageState createState() => _LoginPageState();
-// }
-
-// class _LoginPageState extends State<LoginPage> {
-//   final TextEditingController emailController = TextEditingController();
-//   final TextEditingController passwordController = TextEditingController();
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(title: Text('Login as ${widget.userType}')),
-//       body: Padding(
-//         padding: EdgeInsets.all(16.0),
-//         child: Column(
-//           children: [
-//             TextField(
-//               controller: emailController,
-//               decoration: InputDecoration(labelText: 'Email'),
-//             ),
-//             TextField(
-//               controller: passwordController,
-//               decoration: InputDecoration(labelText: 'Password'),
-//               obscureText: true,
-//             ),
-//             SizedBox(height: 20),
-//             ElevatedButton(
-//               onPressed: () {
-//                 // Implement login logic here
-//               },
-//               child: Text('Login'),
-//             ),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-// }

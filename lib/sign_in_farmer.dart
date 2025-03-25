@@ -1,5 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'log_in_farmer.dart';
 
 class SignInFarmer extends StatefulWidget {
@@ -21,51 +22,51 @@ class _SignInFarmerState extends State<SignInFarmer> {
   final TextEditingController _registrationController = TextEditingController();
 
   bool _obscurePassword = true;
-  final Map<String, String?> _errors = {}; // Store field-specific errors
+  bool _isLoading = false; // Loading state for sign-up button
 
-  void _validateAndSubmit() {
+  // Firebase Authentication
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  void _validateAndSubmit() async {
     if (_formKey.currentState!.validate()) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Sign Up Successful!")));
-
-      // Navigate to the login screen after a short delay
-      Future.delayed(const Duration(seconds: 1), () {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const LogInFarmer()),
-        );
-      });
-    }
-  }
-
-  void _clearError(String field) {
-    if (_errors[field] != null) {
       setState(() {
-        _errors.remove(field);
+        _isLoading = true;
       });
+
+      try {
+        await _auth.createUserWithEmailAndPassword(
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim(),
+        );
+
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text("Sign Up Successful!")));
+
+        // Navigate to login screen after a short delay
+        Future.delayed(const Duration(seconds: 1), () {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const LogInFarmer()),
+          );
+        });
+      } on FirebaseAuthException catch (e) {
+        setState(() {
+          _isLoading = false;
+        });
+
+        String errorMessage = "An error occurred. Please try again.";
+        if (e.code == 'email-already-in-use') {
+          errorMessage = "Email is already in use.";
+        } else if (e.code == 'weak-password') {
+          errorMessage = "Password must be at least 6 characters.";
+        }
+
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(errorMessage)));
+      }
     }
-  }
-
-  String? _validateEmail(String? value) {
-    if (value == null || value.isEmpty) return "Email is required";
-    final emailRegExp = RegExp(
-      r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$",
-    );
-    return emailRegExp.hasMatch(value) ? null : "Enter a valid email";
-  }
-
-  String? _validatePhone(String? value) {
-    if (value == null || value.isEmpty) return "Phone number is required";
-    if (value.length != 10 || !RegExp(r'^[0-9]+$').hasMatch(value)) {
-      return "Enter a valid 10-digit phone number";
-    }
-    return null;
-  }
-
-  String? _validatePassword(String? value) {
-    if (value == null || value.isEmpty) return "Password is required";
-    return value.length < 6 ? "Password must be at least 6 characters" : null;
   }
 
   Widget _buildTextField({
@@ -76,67 +77,34 @@ class _SignInFarmerState extends State<SignInFarmer> {
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 5),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          TextFormField(
-            controller: controller,
-            obscureText: isPassword && _obscurePassword,
-            validator: (value) {
-              String? error = validator?.call(value);
-              return error;
-            },
-            onChanged: (value) => _clearError(label),
-            decoration: InputDecoration(
-              labelText: label,
-              filled: true,
-              fillColor: const Color(0xFFA7DA7D),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: BorderSide.none,
-              ),
-              suffixIcon:
-                  isPassword
-                      ? IconButton(
-                        icon: Icon(
-                          _obscurePassword
-                              ? Icons.visibility_off
-                              : Icons.visibility,
-                        ),
-                        onPressed:
-                            () => setState(
-                              () => _obscurePassword = !_obscurePassword,
-                            ),
-                      )
-                      : null,
-            ),
+      child: TextFormField(
+        controller: controller,
+        obscureText: isPassword && _obscurePassword,
+        validator: validator,
+        decoration: InputDecoration(
+          labelText: label,
+          filled: true,
+          fillColor: const Color(0xFFA7DA7D),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide.none,
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFileUploadButton(String label) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 5),
-      child: Row(
-        children: [
-          Expanded(child: Text(label, style: const TextStyle(fontSize: 14))),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF4CAF50),
-            ),
-            onPressed: () {
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(SnackBar(content: Text("$label upload pressed")));
-            },
-            child: const Text(
-              "Choose Files",
-              style: TextStyle(color: Colors.white),
-            ),
-          ),
-        ],
+          suffixIcon:
+              isPassword
+                  ? IconButton(
+                    icon: Icon(
+                      _obscurePassword
+                          ? Icons.visibility_off
+                          : Icons.visibility,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _obscurePassword = !_obscurePassword;
+                      });
+                    },
+                  )
+                  : null,
+        ),
       ),
     );
   }
@@ -166,12 +134,8 @@ class _SignInFarmerState extends State<SignInFarmer> {
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color:
-                              Colors
-                                  .blue, // Change color to indicate it's clickable
-                          decoration:
-                              TextDecoration
-                                  .underline, // Underline for better UX
+                          color: Colors.blue,
+                          decoration: TextDecoration.underline,
                         ),
                         recognizer:
                             TapGestureRecognizer()
@@ -179,9 +143,7 @@ class _SignInFarmerState extends State<SignInFarmer> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder:
-                                        (context) =>
-                                            const LogInFarmer(), // Replace with your login page widget
+                                    builder: (context) => const LogInFarmer(),
                                   ),
                                 );
                               },
@@ -203,7 +165,7 @@ class _SignInFarmerState extends State<SignInFarmer> {
                   children: [
                     const Center(
                       child: Text(
-                        "SIGN IN",
+                        "SIGN UP",
                         style: TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
@@ -211,43 +173,50 @@ class _SignInFarmerState extends State<SignInFarmer> {
                       ),
                     ),
                     const SizedBox(height: 20),
-
-                    const Text(
-                      "PERSONAL DETAILS",
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
                     _buildTextField(label: "Name", controller: _nameController),
                     _buildTextField(
                       label: "Email",
                       controller: _emailController,
-                      validator: _validateEmail,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return "Email is required";
+                        }
+                        final emailRegExp = RegExp(
+                          r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$",
+                        );
+                        return emailRegExp.hasMatch(value)
+                            ? null
+                            : "Enter a valid email";
+                      },
                     ),
                     _buildTextField(
                       label: "Phone",
                       controller: _phoneController,
-                      validator: _validatePhone,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return "Phone number is required";
+                        }
+                        if (value.length != 10 ||
+                            !RegExp(r'^[0-9]+$').hasMatch(value)) {
+                          return "Enter a valid 10-digit phone number";
+                        }
+                        return null;
+                      },
                     ),
                     _buildTextField(
                       label: "Password",
                       controller: _passwordController,
                       isPassword: true,
-                      validator: _validatePassword,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return "Password is required";
+                        }
+                        return value.length < 6
+                            ? "Password must be at least 6 characters"
+                            : null;
+                      },
                     ),
-
                     const SizedBox(height: 20),
-
-                    const Text(
-                      "FARM DETAILS",
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
                     _buildTextField(
                       label: "Farm Name",
                       controller: _farmNameController,
@@ -260,12 +229,7 @@ class _SignInFarmerState extends State<SignInFarmer> {
                       label: "Registration Number",
                       controller: _registrationController,
                     ),
-                    const SizedBox(height: 10),
-
-                    _buildFileUploadButton("Government ID"),
-                    _buildFileUploadButton("Farm Photos"),
                     const SizedBox(height: 30),
-
                     Center(
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
@@ -275,11 +239,19 @@ class _SignInFarmerState extends State<SignInFarmer> {
                             borderRadius: BorderRadius.circular(10),
                           ),
                         ),
-                        onPressed: _validateAndSubmit,
-                        child: const Text(
-                          "SIGN IN",
-                          style: TextStyle(fontSize: 16, color: Colors.white),
-                        ),
+                        onPressed: _isLoading ? null : _validateAndSubmit,
+                        child:
+                            _isLoading
+                                ? const CircularProgressIndicator(
+                                  color: Colors.white,
+                                )
+                                : const Text(
+                                  "SIGN UP",
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.white,
+                                  ),
+                                ),
                       ),
                     ),
                     const SizedBox(height: 20),
