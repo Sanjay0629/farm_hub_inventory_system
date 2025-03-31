@@ -1,15 +1,15 @@
-import 'package:farm_hub/farmer_profile.dart';
+import 'package:farm_hub/farm_account.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'sign_in_farmer.dart';
 import 'selection_page.dart';
-import 'location_page.dart';
 
 class LogInFarmer extends StatefulWidget {
   const LogInFarmer({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _LogInFarmer createState() => _LogInFarmer();
 }
 
@@ -57,7 +57,7 @@ class _LogInFarmer extends State<LogInFarmer> {
 
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => FarmerProfile()),
+        MaterialPageRoute(builder: (context) => FarmAccount()),
       );
     } on FirebaseAuthException catch (e) {
       setState(() {

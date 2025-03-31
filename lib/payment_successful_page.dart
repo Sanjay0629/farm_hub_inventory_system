@@ -1,6 +1,5 @@
 import 'package:farm_hub/browse_farm_page.dart';
 import 'package:flutter/material.dart';
-import 'location_page.dart';
 
 class PaymentSuccessfulPage extends StatelessWidget {
   const PaymentSuccessfulPage({super.key});
@@ -28,19 +27,6 @@ class PaymentSuccessfulPage extends StatelessWidget {
             ),
           ),
           Positioned(
-            top: 20,
-            left: 20,
-            child: IconButton(
-              icon: Icon(Icons.arrow_back, color: Colors.black, size: 30),
-              onPressed: () {
-                Navigator.pop(
-                  context,
-                  MaterialPageRoute(builder: (context) => const LocationPage()),
-                );
-              },
-            ),
-          ),
-          Positioned(
             left: 275,
             top: 670,
             child: CircleAvatar(
@@ -48,14 +34,6 @@ class PaymentSuccessfulPage extends StatelessWidget {
               backgroundColor: Color(0xBFA8DF6E),
             ),
           ),
-          // Positioned(
-          //   left: 275,
-          //   top: 670,
-          //   child: CircleAvatar(
-          //     radius: 130,
-          //     backgroundColor: Color(0xBFEAE86C),
-          //   ),
-          // ),
           Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [

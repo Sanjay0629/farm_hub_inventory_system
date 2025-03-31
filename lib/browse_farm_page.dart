@@ -1,11 +1,10 @@
 import 'package:farm_hub/cart_page.dart';
-// import 'package:farm_hub/get_location.dart';
+import 'package:farm_hub/selection_page.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'global_variables.dart';
 import 'buyingpage.dart';
-import 'location_page.dart';
 
 class BrowseFarmsPage extends StatefulWidget {
   const BrowseFarmsPage({super.key});
@@ -36,8 +35,6 @@ class _BrowseFarmsPageState extends State<BrowseFarmsPage> {
       });
       return;
     }
-
-    // Request permission
     permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
@@ -90,9 +87,9 @@ class _BrowseFarmsPageState extends State<BrowseFarmsPage> {
         backgroundColor: Color(0xFFA8DF6E),
         leading: IconButton(
           onPressed: () {
-            Navigator.pop(
+            Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => const LocationPage()),
+              MaterialPageRoute(builder: (context) => SelectionPage()),
             );
           },
           icon: Icon(Icons.arrow_back, color: Colors.black),
@@ -124,30 +121,6 @@ class _BrowseFarmsPageState extends State<BrowseFarmsPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Row(
-                //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                //   children: [
-                //     IconButton(
-                //       icon: const Icon(Icons.menu, color: Colors.black),
-                //       onPressed: () {},
-                //     ),
-                //     const Text(
-                //       "FarmHub",
-                //       style: TextStyle(
-                //         fontSize: 22,
-                //         fontWeight: FontWeight.bold,
-                //         fontFamily: "Fredoka",
-                //       ),
-                //     ),
-                //     IconButton(
-                //       icon: const Icon(
-                //         Icons.shopping_cart,
-                //         color: Colors.black,
-                //       ),
-                //       onPressed: () {},
-                //     ),
-                //   ],
-                // ),
                 const SizedBox(height: 10),
                 Container(
                   padding: const EdgeInsets.all(10),
@@ -221,8 +194,6 @@ class _BrowseFarmsPageState extends State<BrowseFarmsPage> {
           ),
 
           const SizedBox(height: 20),
-
-          // Farm Cards Grid (Covers Full Screen)
           Expanded(
             child: Container(
               width: double.infinity,

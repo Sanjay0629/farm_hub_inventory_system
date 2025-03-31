@@ -1,5 +1,5 @@
 import 'package:farm_hub/browse_farm_page.dart';
-// import 'package:farm_hub/payment_successful_page.dart';
+import 'package:farm_hub/selection_page.dart';
 import 'package:flutter/material.dart';
 
 class LocationPage extends StatelessWidget {
@@ -28,19 +28,19 @@ class LocationPage extends StatelessWidget {
               backgroundColor: Color.fromRGBO(235, 233, 109, 0.75),
             ),
           ),
-
-          // Back button inside the top circle
-          // Positioned(
-          //   top: 20,
-          //   left: 20,
-          //   child: IconButton(
-          //     icon: Icon(Icons.arrow_back, color: Colors.black, size: 30),
-          //     onPressed: () {
-          //       Navigator.pop(context);
-          //     },
-          //   ),
-          // ),
-
+          Positioned(
+            top: 30,
+            left: 20,
+            child: IconButton(
+              icon: Icon(Icons.arrow_back, color: Colors.black, size: 30),
+              onPressed: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => SelectionPage()),
+                );
+              },
+            ),
+          ),
           // Bottom circles
           Positioned(
             right: 143,

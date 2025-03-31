@@ -1,5 +1,6 @@
 import 'package:farm_hub/farmer_profile.dart';
 import 'package:farm_hub/inventory_screen.dart';
+import 'package:farm_hub/payment_farmer.dart';
 import 'package:farm_hub/selection_page.dart';
 import 'package:flutter/material.dart';
 
@@ -191,7 +192,7 @@ class FarmAccount extends StatelessWidget {
               } else if (title == "Payment Details") {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => InventoryScreen()),
+                  MaterialPageRoute(builder: (context) => PaymentFarmer()),
                 );
               } else if (title == "Logout") {
                 Navigator.push(

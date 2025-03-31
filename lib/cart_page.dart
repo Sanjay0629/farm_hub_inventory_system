@@ -1,4 +1,4 @@
-import 'package:farm_hub/payment_successful_page.dart';
+import 'package:farm_hub/payment_consumer.dart';
 import 'package:flutter/material.dart';
 import 'cart_data.dart'; // Import the cart data file
 
@@ -181,7 +181,7 @@ class _CartPageState extends State<CartPage> {
                             Navigator.pushReplacement(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => PaymentSuccessfulPage(),
+                                builder: (context) => PaymentConsumer(),
                               ),
                             );
                           },
