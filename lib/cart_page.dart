@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:farm_hub/payment_consumer.dart';
 import 'package:flutter/material.dart';
 import 'cart_data.dart';
