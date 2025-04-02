@@ -16,71 +16,46 @@ FarmHub is a Flutter-based cross-platform mobile application designed to elimina
 
 ### 🔐 Authentication Screens
 
-#### Consumer Login
-![Consumer Login](screenshots/consumer_login.png)
-
-#### Consumer Signup
-![Consumer Signup](screenshots/consumer_signup.png)
-
-#### Farmer Login
-![Farmer Login](screenshots/farmer_login.png)
-
-#### Farmer Signup
-![Farmer Signup](screenshots/farmer_signup.png)
+| Consumer Login | Consumer Signup | Farmer Login | Farmer Signup |
+|----------------|------------------|--------------|----------------|
+| ![Consumer Login](screenshots/consumer_login.png) | ![Consumer Signup](screenshots/consumer_signup.png) | ![Farmer Login](screenshots/farmer_login.png) | ![Farmer Signup](screenshots/farmer_signup.png) |
 
 ---
 
 ### 🧑‍🌾 Farmer Side Screens
 
-#### Farmer Dashboard
-![Farmer Dashboard](screenshots/farmer_dashboard.png)
+| Dashboard | Inventory | Add Product | Profile |
+|-----------|-----------|-------------|---------|
+| ![Farmer Dashboard](screenshots/farmer_dashboard.png) | ![Inventory](screenshots/inventory.png) | ![Add Product](screenshots/add_product.png) | ![Farmer Profile](screenshots/farmer_profile.png) |
 
-#### Inventory Page
-![Inventory](screenshots/inventory.png)
-
-#### Add Product
-![Add Product](screenshots/add_product.png)
-
-#### My Profile
-![Farmer Profile](screenshots/farmer_profile.png)
-
-#### Payment Details
-![Payment Details](screenshots/payment_details.png)
-
-#### Chat Interface (Farmer)
-![Farmer Chat](screenshots/farmer_chat.png)
+| Payment Details |
+|-----------------|
+| ![Payment Details](screenshots/payment_details.png) |
 
 ---
 
 ### 🛒 Consumer Side Screens
 
-#### Home Page
-![Consumer Home](screenshots/consumer_home.png)
+| Home Page | Marketplace | Cart | Checkout |
+|-----------|-------------|------|----------|
+| ![Consumer Home](screenshots/consumer_home.png) | ![Marketplace](screenshots/marketplace.png) | ![Cart](screenshots/cart.png) | ![Checkout](screenshots/checkout.png) |
 
-#### Marketplace
-![Marketplace](screenshots/marketplace.png)
-
-#### Cart Page
-![Cart](screenshots/cart.png)
-
-#### Checkout & Payment
-![Checkout](screenshots/checkout.png)
-
-#### Order Confirmation
-![Order Confirmation](screenshots/order_confirmation.png)
-
-#### Track Order
-![Track Order](screenshots/track_order.png)
-
-#### Chat Interface (Consumer)
-![Consumer Chat](screenshots/consumer_chat.png)
+| Order Confirmation |
+|--------------------|
+| ![Order Confirmation](screenshots/order_confirmation.png) | 
 
 ---
 
 ### 📍 Location Access
 
-#### Location Permission Prompt
-![Location Access](screenshots/location_access.png)
+| Location Access Prompt |
+|------------------------|
+| ![Location Access](screenshots/location_access.png) |
+
+---
+
+> 📝 Make sure your `screenshots/` folder contains these images, and the file names match exactly. You can adjust the markdown if your file names are different.
+
 
 ---
 
