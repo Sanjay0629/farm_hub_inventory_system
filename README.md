@@ -40,9 +40,9 @@ FarmHub is a Flutter-based cross-platform mobile application designed to elimina
 |-----------|-------------|------|----------|
 | ![Consumer Home](screenshots/consumer_home.png) | ![Marketplace](screenshots/marketplace.png) | ![Cart](screenshots/cart.png) | ![Checkout](screenshots/checkout.png) |
 
-| Order Confirmation |
-|--------------------|
-| ![Order Confirmation](screenshots/order_confirmation.png) | 
+| Order Confirmation | Payment Details |
+|--------------------|------------------|
+| ![Order Confirmation](screenshots/order_confirmation.png) | ![Consumer Payment](screenshots/consumer_payment.png) |
 
 ---
 
@@ -51,6 +51,7 @@ FarmHub is a Flutter-based cross-platform mobile application designed to elimina
 | Location Access Prompt |
 |------------------------|
 | ![Location Access](screenshots/location_access.png) |
+
 
 ---
 
