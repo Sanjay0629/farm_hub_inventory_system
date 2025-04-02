@@ -53,30 +53,72 @@ FarmHub is a Flutter-based cross-platform mobile application designed to elimina
 | ![Location Access](screenshots/location_access.png) |
 
 
----
+### Prerequisites
 
-> 📝 Make sure your `screenshots/` folder contains these images, and the file names match exactly. You can adjust the markdown if your file names are different.
+- Flutter SDK (>=3.0.0)
+- Dart (>=2.17.0)
+- Android Studio / VS Code
+- Firebase Project
+- Cloudinary Account (for image storage)
 
+### Installation
 
----
+1. Clone the repository:
+```bash
+git clone https://github.com/yourusername/farmhub.git
+cd farmhub
 
-> 📝 Make sure to save all images in a folder called `screenshots/` at your project root. Rename the screenshots to match the filenames above, or edit the markdown if you use different names.
+Install dependencies:
+flutter pub get
 
+Set up Firebase:
 
+Create a Firebase project at https://console.firebase.google.com/
 
----
+Add Android/iOS apps to the Firebase project
 
-> 📝 Place all your screenshots in a folder called `screenshots/` at the root of your repo. Make sure the file names match those used above, or adjust the markdown accordingly.
+Download google-services.json and place it in android/app/
 
+Enable Firestore, Authentication, and Storage
 
+Set up Cloudinary:
 
-This project is a starting point for a Flutter application.
+Sign up at https://cloudinary.com/
 
-A few resources to get you started if this is your first Flutter project:
+Note your cloud name, API key, and API secret
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+Use them in your image upload functions
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Run the app:
+flutter run
+
+Folder Structure
+lib/
+├── main.dart
+├── auth/               # Login and signup screens
+├── dashboard/          # Farmer dashboard UI
+├── marketplace/        # Consumer view and product listing
+├── models/             # Data models
+├── services/           # Firebase & Cloudinary services
+├── widgets/            # Reusable components
+└── utils/              # Constants, helpers
+
+Dependencies:
+firebase_auth
+cloud_firestore
+firebase_core
+firebase_storage
+provider
+geolocator
+image_picker
+http
+
+Firebase Collections (Structure)
+users (stores user data, role: farmer/consumer)
+products (stores items listed by farmers)
+orders (tracks purchases)
+carts (temporary cart data per consumer)
+chats (consumer-farmer chat messages)
+
+Contributing
+Contributions are welcome! Please fork the repo and submit a pull request for any improvements or fixes.
