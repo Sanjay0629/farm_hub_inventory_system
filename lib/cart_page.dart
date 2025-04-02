@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:farm_hub/payment_consumer.dart';
 import 'package:flutter/material.dart';
 import 'cart_data.dart';
@@ -75,10 +76,23 @@ class _CartPageState extends State<CartPage> {
                           ),
                           elevation: 3,
                           child: ListTile(
-                            leading: Image.asset(
-                              (item["image"] ?? "").toString(),
-                              width: 50,
-                            ),
+                            leading:
+                                item["image"] != null &&
+                                        item["image"].toString().startsWith(
+                                          "http",
+                                        )
+                                    ? Image.network(
+                                      item["image"],
+                                      width: 50,
+                                      height: 50,
+                                      fit: BoxFit.cover,
+                                    )
+                                    : Image.asset(
+                                      item["image"] ?? "",
+                                      width: 50,
+                                      height: 50,
+                                      fit: BoxFit.cover,
+                                    ),
                             title: Text(
                               item["title"] ?? "",
                               style: TextStyle(
@@ -97,6 +111,15 @@ class _CartPageState extends State<CartPage> {
                                     fontFamily: "Fredoka",
                                   ),
                                 ),
+                                if (item["farmerName"] != null)
+                                  Text(
+                                    "Farmer: ${item["farmerName"]}",
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontFamily: "Fredoka",
+                                      color: Colors.grey[700],
+                                    ),
+                                  ),
                                 SizedBox(height: 5),
                                 Text(
                                   "${item["price"]} x ${item["quantity"]} = ₹${(double.parse((item["price"] ?? "").replaceAll("₹", "").replaceAll("/kg", "").trim()) * int.parse(item["quantity"] ?? "0")).toStringAsFixed(2)}",

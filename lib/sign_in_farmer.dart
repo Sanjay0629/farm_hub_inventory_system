@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:geolocator/geolocator.dart';
 import 'log_in_farmer.dart';
 
 class SignInFarmer extends StatefulWidget {
@@ -28,12 +29,38 @@ class _SignInFarmerState extends State<SignInFarmer> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
+  Future<Position> _getFarmerLocation() async {
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      await Geolocator.openLocationSettings();
+      throw Exception('Location services are disabled.');
+    }
+
+    LocationPermission permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        throw Exception('Location permissions are denied');
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      throw Exception('Location permissions are permanently denied.');
+    }
+
+    return await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high,
+    );
+  }
+
   Future<void> _validateAndSubmit() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
 
     try {
+      final position = await _getFarmerLocation();
+
       UserCredential userCredential = await _auth
           .createUserWithEmailAndPassword(
             email: _emailController.text.trim(),
@@ -50,6 +77,8 @@ class _SignInFarmerState extends State<SignInFarmer> {
         'farmName': _farmNameController.text.trim(),
         'location': _locationController.text.trim(),
         'registrationNumber': _registrationController.text.trim(),
+        'latitude': position.latitude,
+        'longitude': position.longitude,
         'role': 'farmer',
         'createdAt': FieldValue.serverTimestamp(),
       });
@@ -117,9 +146,9 @@ class _SignInFarmerState extends State<SignInFarmer> {
                           : Icons.visibility,
                     ),
                     onPressed:
-                        () => setState(() {
-                          _obscurePassword = !_obscurePassword;
-                        }),
+                        () => setState(
+                          () => _obscurePassword = !_obscurePassword,
+                        ),
                   )
                   : null,
         ),
@@ -196,7 +225,7 @@ class _SignInFarmerState extends State<SignInFarmer> {
                         if (value == null || value.isEmpty)
                           return "Email is required";
                         final emailRegExp = RegExp(
-                          r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$",
+                          r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}",
                         );
                         return emailRegExp.hasMatch(value)
                             ? null

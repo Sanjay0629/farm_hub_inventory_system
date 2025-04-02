@@ -41,10 +41,9 @@ class _PaymentConsumerState extends State<PaymentConsumer> {
   }
 
   void _openRazorpayCheckout() {
-    print("Opening Razorpay Checkout...");
     var options = {
       'key': paymentapikey,
-      'amount': (totalAmount * 100).toInt(), // in paise
+      'amount': (totalAmount * 100).toInt(),
       'name': 'FarmHub',
       'description': 'Farm Product Purchase',
       'prefill': {'contact': '9876543210', 'email': 'user@example.com'},
@@ -70,30 +69,28 @@ class _PaymentConsumerState extends State<PaymentConsumer> {
         'totalAmount': totalAmount,
         'timestamp': FieldValue.serverTimestamp(),
         'items':
-            cartItems
-                .map(
-                  (item) => {
-                    'title': item['title'],
-                    'price': item['price'],
-                    'quantity': item['quantity'],
-                    'description': item['description'],
-                    'farmerId':
-                        item['farmerId'] ??
-                        'unknown_farmer', // ✅ added farmerId
-                  },
-                )
-                .toList(),
+            cartItems.map((item) {
+              return {
+                'title': item['title'],
+                'price': item['price'],
+                'quantity': item['quantity'],
+                'description': item['description'],
+                'image': item['image'],
+                'farmerName': item['farmerName'],
+                'farmerId': item['farmerId'] ?? 'unknown_farmer',
+              };
+            }).toList(),
       });
 
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text("Payment Successful!")));
+      ).showSnackBar(const SnackBar(content: Text("✅ Payment Successful!")));
 
       cartItems.clear();
 
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => PaymentSuccessfulPage()),
+        MaterialPageRoute(builder: (context) => const PaymentSuccessfulPage()),
       );
     } catch (e) {
       print("Firestore Save Error: $e");
@@ -106,7 +103,7 @@ class _PaymentConsumerState extends State<PaymentConsumer> {
   void _handleError(PaymentFailureResponse response) {
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(SnackBar(content: Text("Payment Failed")));
+    ).showSnackBar(const SnackBar(content: Text("❌ Payment Failed")));
   }
 
   void _handleExternalWallet(ExternalWalletResponse response) {
@@ -124,10 +121,10 @@ class _PaymentConsumerState extends State<PaymentConsumer> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFA9E06E),
+      backgroundColor: const Color(0xFFA9E06E),
       appBar: AppBar(
-        title: Text("Payment", style: TextStyle(fontFamily: "Fredoka")),
-        backgroundColor: Color(0xFFA9E06E),
+        title: const Text("Payment", style: TextStyle(fontFamily: "Fredoka")),
+        backgroundColor: const Color(0xFFA9E06E),
         centerTitle: true,
         elevation: 0,
       ),
@@ -145,14 +142,14 @@ class _PaymentConsumerState extends State<PaymentConsumer> {
                 padding: const EdgeInsets.all(20.0),
                 child: Column(
                   children: [
-                    Text(
+                    const Text(
                       "You are about to pay",
                       style: TextStyle(fontSize: 16, fontFamily: "Fredoka"),
                     ),
-                    SizedBox(height: 10),
+                    const SizedBox(height: 10),
                     Text(
                       "₹${totalAmount.toStringAsFixed(2)}",
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 26,
                         fontWeight: FontWeight.bold,
                         color: Colors.green,
@@ -163,38 +160,39 @@ class _PaymentConsumerState extends State<PaymentConsumer> {
                 ),
               ),
             ),
-            SizedBox(height: 30),
+            const SizedBox(height: 30),
             ElevatedButton(
               onPressed: _openRazorpayCheckout,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.green,
                 foregroundColor: Colors.white,
-                minimumSize: Size(double.infinity, 50),
+                minimumSize: const Size(double.infinity, 50),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
                 ),
               ),
               child: Text(
                 "Pay ₹${totalAmount.toStringAsFixed(2)} with Razorpay",
-                style: TextStyle(fontSize: 16, fontFamily: "Fredoka"),
+                style: const TextStyle(fontSize: 16, fontFamily: "Fredoka"),
               ),
             ),
-            SizedBox(height: 30),
+            const SizedBox(height: 30),
             ElevatedButton(
-              onPressed:
-                  () => Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => CartPage()),
-                  ),
+              onPressed: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => const CartPage()),
+                );
+              },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white,
                 foregroundColor: Colors.black,
-                minimumSize: Size(double.infinity, 50),
+                minimumSize: const Size(double.infinity, 50),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(20),
                 ),
               ),
-              child: Text(
+              child: const Text(
                 "Back to Cart",
                 style: TextStyle(fontSize: 16, fontFamily: "Fredoka"),
               ),
