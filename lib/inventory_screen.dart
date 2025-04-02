@@ -1,21 +1,10 @@
-import 'package:farm_hub/farm_account.dart';
+import 'dart:io';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-
-class Product {
-  String name;
-  String description;
-  int quantity;
-  double pricePerKg;
-  String imageAsset;
-
-  Product({
-    required this.name,
-    required this.description,
-    required this.quantity,
-    required this.pricePerKg,
-    required this.imageAsset,
-  });
-}
+import 'package:image_picker/image_picker.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class InventoryScreen extends StatefulWidget {
   const InventoryScreen({super.key});
@@ -25,298 +14,299 @@ class InventoryScreen extends StatefulWidget {
 }
 
 class _InventoryScreenState extends State<InventoryScreen> {
-  List<Product> products = [
-    Product(
-      name: "Tomatoes",
-      description: "Fresh tomatoes - locally organically grown",
-      quantity: 12,
-      pricePerKg: 20.02,
-      imageAsset: 'assets/images/tomatoes.png',
-    ),
-    Product(
-      name: "Carrots",
-      description: "Fresh carrots - orange, organically grown",
-      quantity: 5,
-      pricePerKg: 50.0,
-      imageAsset: 'assets/images/carrots.png',
-    ),
-    Product(
-      name: "Bananas",
-      description: "Fresh bananas - yellow and juicy",
-      quantity: 10,
-      pricePerKg: 80.5,
-      imageAsset: 'assets/images/bananas.png',
-    ),
-  ];
+  final _auth = FirebaseAuth.instance;
+  final _firestore = FirebaseFirestore.instance;
+  String? farmerId;
 
-  void updateQuantity(int index, int change) {
-    setState(() {
-      int newQty = products[index].quantity + change;
-      if (newQty >= 0) {
-        products[index].quantity = newQty;
-      }
-    });
+  @override
+  void initState() {
+    super.initState();
+    farmerId = _auth.currentUser?.uid;
   }
 
-  void updatePrice(int index, double change) {
-    setState(() {
-      double newPrice = products[index].pricePerKg + change;
-      if (newPrice >= 0) {
-        products[index].pricePerKg = double.parse(newPrice.toStringAsFixed(2));
-      }
-    });
-  }
+  Future<String?> uploadImageToCloudinary(XFile imageFile) async {
+    const cloudName = 'dbi0syxmv';
+    const uploadPreset = 'farmhub_upload'; // Use your unsigned preset
 
-  void showAddItemDialog() {
-    final nameController = TextEditingController();
-    final descController = TextEditingController();
-    final qtyController = TextEditingController();
-    final priceController = TextEditingController();
-    final imgController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text("Add New Product"),
-            content: SingleChildScrollView(
-              child: Column(
-                children: [
-                  TextField(
-                    controller: nameController,
-                    decoration: const InputDecoration(labelText: 'Name'),
-                  ),
-                  TextField(
-                    controller: descController,
-                    decoration: const InputDecoration(labelText: 'Description'),
-                  ),
-                  TextField(
-                    controller: qtyController,
-                    decoration: const InputDecoration(
-                      labelText: 'Quantity (kg)',
-                    ),
-                    keyboardType: TextInputType.number,
-                  ),
-                  TextField(
-                    controller: priceController,
-                    decoration: const InputDecoration(
-                      labelText: 'Price per kg',
-                    ),
-                    keyboardType: TextInputType.number,
-                  ),
-                  TextField(
-                    controller: imgController,
-                    decoration: const InputDecoration(
-                      labelText: 'Image asset path (e.g. assets/apple.png)',
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                },
-                child: const Text("Cancel"),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  setState(() {
-                    products.add(
-                      Product(
-                        name: nameController.text,
-                        description: descController.text,
-                        quantity: int.tryParse(qtyController.text) ?? 0,
-                        pricePerKg:
-                            double.tryParse(priceController.text) ?? 0.0,
-                        imageAsset: imgController.text,
-                      ),
-                    );
-                  });
-                  Navigator.pop(context);
-                },
-                child: const Text("Add"),
-              ),
-            ],
-          ),
+    final url = Uri.parse(
+      'https://api.cloudinary.com/v1_1/$cloudName/image/upload',
     );
+
+    final request =
+        http.MultipartRequest('POST', url)
+          ..fields['upload_preset'] = uploadPreset
+          ..files.add(
+            await http.MultipartFile.fromPath('file', imageFile.path),
+          );
+
+    final response = await request.send();
+
+    if (response.statusCode == 200) {
+      final resData = json.decode(await response.stream.bytesToString());
+      return resData['secure_url'];
+    } else {
+      print("Cloudinary upload failed: ${response.statusCode}");
+      return null;
+    }
+  }
+
+  Future<void> _showProductDialog({
+    Map<String, dynamic>? product,
+    String? docId,
+  }) async {
+    final nameController = TextEditingController(text: product?['name']);
+    final priceController = TextEditingController(text: product?['price']);
+    final quantityController = TextEditingController(
+      text: product?['quantity'],
+    );
+    final descriptionController = TextEditingController(
+      text: product?['description'],
+    );
+    XFile? pickedImage;
+    String? imageUrl = product?['imageUrl'];
+
+    await showDialog(
+      context: context,
+      builder: (_) {
+        return StatefulBuilder(
+          builder: (context, setStateSB) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              title: Text(
+                product == null ? 'Add Product' : 'Edit Product',
+                style: const TextStyle(fontFamily: "Fredoka"),
+              ),
+              content: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    GestureDetector(
+                      onTap: () async {
+                        final picker = ImagePicker();
+                        final picked = await picker.pickImage(
+                          source: ImageSource.gallery,
+                        );
+                        if (picked != null) {
+                          setStateSB(() => pickedImage = picked);
+                        }
+                      },
+                      child: CircleAvatar(
+                        radius: 40,
+                        backgroundImage:
+                            pickedImage != null
+                                ? FileImage(File(pickedImage!.path))
+                                : (imageUrl != null
+                                        ? NetworkImage(imageUrl)
+                                        : null)
+                                    as ImageProvider?,
+                        child:
+                            pickedImage == null && imageUrl == null
+                                ? const Icon(Icons.camera_alt)
+                                : null,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    _buildInput(nameController, "Name"),
+                    _buildInput(priceController, "Price (₹)"),
+                    _buildInput(quantityController, "Quantity (kg)"),
+                    _buildInput(
+                      descriptionController,
+                      "Description",
+                      maxLines: 2,
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text("Cancel"),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                  ),
+                  onPressed: () async {
+                    String? finalImageUrl = imageUrl;
+
+                    if (pickedImage != null) {
+                      finalImageUrl = await uploadImageToCloudinary(
+                        pickedImage!,
+                      );
+                      if (finalImageUrl == null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("❌ Image upload failed"),
+                          ),
+                        );
+                        return;
+                      }
+                    }
+
+                    final newProduct = {
+                      'name': nameController.text.trim(),
+                      'price': priceController.text.trim(),
+                      'quantity': quantityController.text.trim(),
+                      'description': descriptionController.text.trim(),
+                      'imageUrl': finalImageUrl,
+                      'farmerId': farmerId,
+                      'timestamp': FieldValue.serverTimestamp(),
+                    };
+
+                    if (docId == null) {
+                      await _firestore.collection('products').add(newProduct);
+                    } else {
+                      await _firestore
+                          .collection('products')
+                          .doc(docId)
+                          .update(newProduct);
+                    }
+
+                    if (mounted) Navigator.pop(context);
+                  },
+                  child: Text(product == null ? "Add" : "Update"),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildInput(
+    TextEditingController controller,
+    String label, {
+    int maxLines = 1,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: TextField(
+        controller: controller,
+        maxLines: maxLines,
+        decoration: InputDecoration(
+          labelText: label,
+          filled: true,
+          fillColor: Colors.grey[200],
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _deleteProduct(String docId) async {
+    await _firestore.collection('products').doc(docId).delete();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-              decoration: const BoxDecoration(
-                color: Color(0xFFB2E38F),
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(20),
-                  bottomRight: Radius.circular(20),
-                ),
-              ),
-              child: Row(
-                children: [
-                  IconButton(
-                    onPressed: () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (context) => FarmAccount()),
+      backgroundColor: const Color(0xFFA8DF6E),
+      appBar: AppBar(
+        title: const Text(
+          "My Inventory",
+          style: TextStyle(fontFamily: "Fredoka"),
+        ),
+        backgroundColor: const Color(0xFFA8DF6E),
+        elevation: 0,
+        centerTitle: true,
+      ),
+      body:
+          farmerId == null
+              ? const Center(child: Text("You are not logged in"))
+              : StreamBuilder<QuerySnapshot>(
+                stream:
+                    _firestore
+                        .collection('products')
+                        .where('farmerId', isEqualTo: farmerId)
+                        .orderBy('timestamp', descending: true)
+                        .snapshots(),
+                builder: (context, snapshot) {
+                  if (snapshot.hasError) {
+                    return Center(child: Text("Error: ${snapshot.error}"));
+                  }
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  final docs = snapshot.data?.docs ?? [];
+
+                  if (docs.isEmpty) {
+                    return const Center(
+                      child: Text(
+                        "No products found",
+                        style: TextStyle(fontFamily: "Fredoka"),
+                      ),
+                    );
+                  }
+
+                  return ListView.builder(
+                    itemCount: docs.length,
+                    itemBuilder: (context, index) {
+                      final product =
+                          docs[index].data() as Map<String, dynamic>;
+                      final docId = docs[index].id;
+
+                      return Card(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: 15,
+                          vertical: 10,
+                        ),
+                        child: ListTile(
+                          leading:
+                              product['imageUrl'] != null
+                                  ? CircleAvatar(
+                                    backgroundImage: NetworkImage(
+                                      product['imageUrl'],
+                                    ),
+                                  )
+                                  : const CircleAvatar(
+                                    child: Icon(Icons.image),
+                                  ),
+                          title: Text(
+                            product['name'],
+                            style: const TextStyle(fontFamily: "Fredoka"),
+                          ),
+                          subtitle: Text(
+                            "₹${product['price']} • ${product['quantity']} kg",
+                          ),
+                          trailing: PopupMenuButton<String>(
+                            onSelected: (value) {
+                              if (value == 'edit') {
+                                _showProductDialog(
+                                  product: product,
+                                  docId: docId,
+                                );
+                              } else if (value == 'delete') {
+                                _deleteProduct(docId);
+                              }
+                            },
+                            itemBuilder:
+                                (context) => const [
+                                  PopupMenuItem(
+                                    value: 'edit',
+                                    child: Text("Edit"),
+                                  ),
+                                  PopupMenuItem(
+                                    value: 'delete',
+                                    child: Text("Delete"),
+                                  ),
+                                ],
+                          ),
+                        ),
                       );
                     },
-                    icon: Icon(Icons.arrow_back),
-                  ),
-                  const SizedBox(width: 10),
-                  const Text(
-                    'Inventory',
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                  ),
-                  const Spacer(),
-                  const Icon(Icons.more_horiz),
-                ],
-              ),
-            ),
-            const SizedBox(height: 15),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                ElevatedButton.icon(
-                  onPressed: showAddItemDialog,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: Colors.black,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                  ),
-                  icon: const Icon(Icons.add),
-                  label: const Text("Add new item"),
-                ),
-                ElevatedButton.icon(
-                  onPressed: () {}, // You can extend this later.
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFCBD9D6),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                  ),
-                  icon: const Icon(Icons.update),
-                  label: const Text("Update item"),
-                ),
-              ],
-            ),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              child: TextField(
-                decoration: InputDecoration(
-                  hintText: 'Search fruits, vegetables',
-                  prefixIcon: Icon(Icons.search),
-                  filled: true,
-                  fillColor: Color(0xFFF0F0F0),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(20)),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
-            ),
-            Expanded(
-              child: ListView.builder(
-                itemCount: products.length,
-                itemBuilder: (context, index) {
-                  final product = products[index];
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    child: Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF9F9F9),
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.grey.withOpacity(0.1),
-                            blurRadius: 5,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Row(
-                        children: [
-                          Image.asset(product.imageAsset, height: 60),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  product.name,
-                                  style: const TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                Text(
-                                  product.description,
-                                  style: const TextStyle(fontSize: 12),
-                                ),
-                                const SizedBox(height: 5),
-                                Row(
-                                  children: [
-                                    const Icon(Icons.scale, size: 16),
-                                    const SizedBox(width: 4),
-                                    Text("${product.quantity} kg"),
-                                    const SizedBox(width: 10),
-                                    const Icon(Icons.currency_rupee, size: 16),
-                                    Text("${product.pricePerKg}/kg"),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                          Column(
-                            children: [
-                              Row(
-                                children: [
-                                  IconButton(
-                                    onPressed: () => updateQuantity(index, 1),
-                                    icon: const Icon(Icons.add_circle),
-                                  ),
-                                  IconButton(
-                                    onPressed: () => updateQuantity(index, -1),
-                                    icon: const Icon(Icons.remove_circle),
-                                  ),
-                                ],
-                              ),
-                              Row(
-                                children: [
-                                  IconButton(
-                                    onPressed: () => updatePrice(index, 1),
-                                    icon: const Icon(Icons.attach_money),
-                                  ),
-                                  IconButton(
-                                    onPressed: () => updatePrice(index, -1),
-                                    icon: const Icon(Icons.money_off),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
                   );
                 },
               ),
-            ),
-          ],
-        ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: Colors.green,
+        onPressed: () => _showProductDialog(),
+        child: const Icon(Icons.add),
       ),
     );
   }

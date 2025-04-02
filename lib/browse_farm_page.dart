@@ -10,7 +10,6 @@ class BrowseFarmsPage extends StatefulWidget {
   const BrowseFarmsPage({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
   _BrowseFarmsPageState createState() => _BrowseFarmsPageState();
 }
 
@@ -27,7 +26,6 @@ class _BrowseFarmsPageState extends State<BrowseFarmsPage> {
     bool serviceEnabled;
     LocationPermission permission;
 
-    // Check if location services are enabled
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
       setState(() {
@@ -35,6 +33,7 @@ class _BrowseFarmsPageState extends State<BrowseFarmsPage> {
       });
       return;
     }
+
     permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
@@ -53,16 +52,15 @@ class _BrowseFarmsPageState extends State<BrowseFarmsPage> {
       return;
     }
 
-    // Get current position
     Position position = await Geolocator.getCurrentPosition(
       desiredAccuracy: LocationAccuracy.high,
     );
 
-    // Reverse geocode to get address
     List<Placemark> placemarks = await placemarkFromCoordinates(
       position.latitude,
       position.longitude,
     );
+
     Placemark place = placemarks[0];
 
     setState(() {
@@ -108,7 +106,6 @@ class _BrowseFarmsPageState extends State<BrowseFarmsPage> {
       ),
       body: Column(
         children: [
-          // Header
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
             decoration: const BoxDecoration(
@@ -172,7 +169,6 @@ class _BrowseFarmsPageState extends State<BrowseFarmsPage> {
 
           const SizedBox(height: 10),
 
-          // Location Info
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Row(
@@ -194,10 +190,10 @@ class _BrowseFarmsPageState extends State<BrowseFarmsPage> {
           ),
 
           const SizedBox(height: 20),
+
           Expanded(
             child: Container(
               width: double.infinity,
-              height: double.infinity,
               padding: EdgeInsets.zero,
               child: GridView.builder(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -239,7 +235,11 @@ class FarmCard extends StatelessWidget {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => BuyingPage()),
+                MaterialPageRoute(
+                  builder:
+                      (context) =>
+                          BuyingPage(farmerId: farm["id"]!), // ✅ Pass farmerId
+                ),
               );
             },
             child: CircleAvatar(

@@ -4,19 +4,18 @@ import 'cart_data.dart'; // Import the cart data file
 import 'cart_page.dart'; // Import CartPage for navigation
 
 class BuyingPage extends StatelessWidget {
-  const BuyingPage({super.key});
+  final String farmerId; // ✅ Accept farmerId from previous page
+
+  const BuyingPage({super.key, required this.farmerId});
+
   void addToCart(String image, String title, String description, String price) {
     bool itemExists = false;
 
     // Check if the item already exists in the cart
     for (var item in cartItems) {
       if (item["title"] == title) {
-        int currentQuantity = int.parse(
-          item["quantity"].toString(),
-        ); // Ensure quantity is treated as int
-        item["quantity"] =
-            (currentQuantity + 1)
-                .toString(); // Convert back to string if necessary
+        int currentQuantity = int.parse(item["quantity"].toString());
+        item["quantity"] = (currentQuantity + 1).toString();
         itemExists = true;
         break;
       }
@@ -29,7 +28,8 @@ class BuyingPage extends StatelessWidget {
         "title": title,
         "description": description,
         "price": price,
-        "quantity": "1", // Store as a string for consistency
+        "quantity": "1",
+        "farmerId": farmerId, // ✅ Add farmerId here
       });
     }
 
@@ -96,7 +96,7 @@ class BuyingPage extends StatelessWidget {
                         ),
                         SizedBox(height: 20),
 
-                        /// 🔹 **Product Cards**
+                        /// 🔹 Product Cards
                         ProductCard(
                           image: 'assets/images/tomatoes.png',
                           title: 'Tomatoes',

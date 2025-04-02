@@ -1,34 +1,34 @@
 import 'package:farm_hub/payment_consumer.dart';
 import 'package:flutter/material.dart';
-import 'cart_data.dart'; // Import the cart data file
+import 'cart_data.dart';
 
 class CartPage extends StatefulWidget {
   const CartPage({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
   _CartPageState createState() => _CartPageState();
 }
 
 class _CartPageState extends State<CartPage> {
-  /// **Function to Update Quantity**
+  /// Function to Update Quantity
   void updateQuantity(int index, int change) {
     setState(() {
-      int currentQuantity = int.parse(
-        cartItems[index]["quantity"] ?? "0",
-      ); // Ensure it's an int
+      int currentQuantity = int.parse(cartItems[index]["quantity"] ?? "0");
       currentQuantity += change;
 
       if (currentQuantity <= 0) {
-        cartItems.removeAt(index); // Remove item if quantity is 0
+        cartItems.removeAt(index);
       } else {
-        cartItems[index]["quantity"] =
-            currentQuantity.toString(); // Convert back to string
+        cartItems[index]["quantity"] = currentQuantity.toString();
+
+        // ✅ Preserve farmerId if it exists
+        cartItems[index]["farmerId"] =
+            cartItems[index]["farmerId"] ?? "unknown_farmer";
       }
     });
   }
 
-  /// **Calculate Total Price**
+  /// Calculate Total Price
   double calculateTotal() {
     double total = 0.0;
     for (var item in cartItems) {
@@ -76,8 +76,7 @@ class _CartPageState extends State<CartPage> {
                           elevation: 3,
                           child: ListTile(
                             leading: Image.asset(
-                              (item["image"] ?? "")
-                                  .toString(), // Ensures it's a valid string
+                              (item["image"] ?? "").toString(),
                               width: 50,
                             ),
                             title: Text(
@@ -120,8 +119,7 @@ class _CartPageState extends State<CartPage> {
                                   onPressed: () => updateQuantity(index, -1),
                                 ),
                                 Text(
-                                  item["quantity"] ??
-                                      "0", // Ensure it displays correctly
+                                  item["quantity"] ?? "0",
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
@@ -142,7 +140,7 @@ class _CartPageState extends State<CartPage> {
                     ),
                   ),
 
-                  /// **Total Price & Checkout Button**
+                  /// Total Price & Checkout Button
                   Container(
                     padding: EdgeInsets.all(16),
                     decoration: BoxDecoration(

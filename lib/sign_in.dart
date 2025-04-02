@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:farm_hub/log_in.dart';
@@ -15,7 +16,10 @@ class _SignInState extends State<SignIn> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+
   bool _obscurePassword = true;
+  bool _isLoading = false;
+
   String? _nameError, _emailError, _passwordError;
 
   @override
@@ -28,7 +32,6 @@ class _SignInState extends State<SignIn> {
     );
   }
 
-  // Function to handle Firebase Sign Up
   void _signUp() async {
     setState(() {
       _nameError = _nameController.text.isEmpty ? "Name is required" : null;
@@ -37,19 +40,30 @@ class _SignInState extends State<SignIn> {
     });
 
     if (_nameError == null && _emailError == null && _passwordError == null) {
-      try {
-        // Create user with Firebase Authentication
-        await FirebaseAuth.instance.createUserWithEmailAndPassword(
-          email: _emailController.text.trim(),
-          password: _passwordController.text.trim(),
-        );
+      setState(() => _isLoading = true);
 
-        // Show success message
+      try {
+        UserCredential userCredential = await FirebaseAuth.instance
+            .createUserWithEmailAndPassword(
+              email: _emailController.text.trim(),
+              password: _passwordController.text.trim(),
+            );
+
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(userCredential.user!.uid)
+            .set({
+              'uid': userCredential.user!.uid,
+              'name': _nameController.text.trim(),
+              'email': _emailController.text.trim(),
+              'role': 'consumer',
+              'createdAt': FieldValue.serverTimestamp(),
+            });
+
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text("Sign Up Successful")));
+        ).showSnackBar(const SnackBar(content: Text("✅ Sign Up Successful")));
 
-        // Navigate to Log In page
         Future.delayed(const Duration(seconds: 1), () {
           Navigator.pushReplacement(
             context,
@@ -57,15 +71,18 @@ class _SignInState extends State<SignIn> {
           );
         });
       } on FirebaseAuthException catch (e) {
+        setState(() => _isLoading = false);
+
         String errorMessage = "Sign up failed";
         if (e.code == 'email-already-in-use') {
           errorMessage = "Email is already in use";
         } else if (e.code == 'weak-password') {
           errorMessage = "Password must be at least 6 characters";
         }
+
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(errorMessage)));
+        ).showSnackBar(SnackBar(content: Text("❌ $errorMessage")));
       }
     }
   }
@@ -86,7 +103,7 @@ class _SignInState extends State<SignIn> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFA7E063), // Light green background
+      backgroundColor: const Color(0xFFA7E063),
       body: SafeArea(
         child: Column(
           children: [
@@ -104,7 +121,9 @@ class _SignInState extends State<SignIn> {
                   onPressed: () {
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (context) => SelectionPage()),
+                      MaterialPageRoute(
+                        builder: (context) => const SelectionPage(),
+                      ),
                     );
                   },
                 ),
@@ -123,7 +142,7 @@ class _SignInState extends State<SignIn> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const Text(
-                      "SIGN IN",
+                      "SIGN UP",
                       style: TextStyle(
                         fontFamily: 'Fredoka',
                         fontSize: 24,
@@ -135,24 +154,22 @@ class _SignInState extends State<SignIn> {
                     Container(
                       padding: const EdgeInsets.all(15),
                       decoration: BoxDecoration(
-                        color: const Color(
-                          0xFFC6E69A,
-                        ), // Light green input background
+                        color: const Color(0xFFC6E69A),
                         borderRadius: BorderRadius.circular(15),
                       ),
                       child: Column(
                         children: [
                           _buildTextField(_nameController, "Name"),
                           if (_nameError != null) _buildErrorText(_nameError!),
-
                           const SizedBox(height: 10),
-
-                          _buildTextField(_emailController, "Email"),
+                          _buildTextField(
+                            _emailController,
+                            "Email",
+                            type: TextInputType.emailAddress,
+                          ),
                           if (_emailError != null)
                             _buildErrorText(_emailError!),
-
                           const SizedBox(height: 10),
-
                           _buildPasswordField(),
                           if (_passwordError != null)
                             _buildErrorText(_passwordError!),
@@ -164,9 +181,7 @@ class _SignInState extends State<SignIn> {
 
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(
-                          0xFF3B5D36,
-                        ), // Dark green button
+                        backgroundColor: const Color(0xFF3B5D36),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
@@ -175,23 +190,28 @@ class _SignInState extends State<SignIn> {
                           horizontal: 100,
                         ),
                       ),
-                      onPressed: _signUp,
-                      child: const Text(
-                        "SIGN IN",
-                        style: TextStyle(
-                          fontFamily: 'Fredoka',
-                          fontSize: 18,
-                          color: Colors.white,
-                        ),
-                      ),
+                      onPressed: _isLoading ? null : _signUp,
+                      child:
+                          _isLoading
+                              ? const CircularProgressIndicator(
+                                color: Colors.white,
+                              )
+                              : const Text(
+                                "SIGN UP",
+                                style: TextStyle(
+                                  fontFamily: 'Fredoka',
+                                  fontSize: 18,
+                                  color: Colors.white,
+                                ),
+                              ),
                     ),
+
                     const SizedBox(height: 30),
                   ],
                 ),
               ),
             ),
 
-            // Bottom text (Fixed at the bottom)
             Padding(
               padding: const EdgeInsets.only(bottom: 20),
               child: Row(
@@ -227,10 +247,14 @@ class _SignInState extends State<SignIn> {
     );
   }
 
-  // Common TextField Widget
-  Widget _buildTextField(TextEditingController controller, String hintText) {
+  Widget _buildTextField(
+    TextEditingController controller,
+    String hintText, {
+    TextInputType type = TextInputType.text,
+  }) {
     return TextField(
       controller: controller,
+      keyboardType: type,
       decoration: InputDecoration(
         hintText: hintText,
         hintStyle: const TextStyle(fontFamily: 'Fredoka', color: Colors.grey),
@@ -239,7 +263,6 @@ class _SignInState extends State<SignIn> {
     );
   }
 
-  // Password Field with Visibility Toggle
   Widget _buildPasswordField() {
     return TextField(
       controller: _passwordController,
@@ -259,7 +282,6 @@ class _SignInState extends State<SignIn> {
     );
   }
 
-  // Error Text Widget
   Widget _buildErrorText(String error) {
     return Padding(
       padding: const EdgeInsets.only(top: 5, left: 5),

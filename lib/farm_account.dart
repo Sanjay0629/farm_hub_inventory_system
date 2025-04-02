@@ -1,11 +1,45 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:farm_hub/payment_farmer.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:farm_hub/farmer_order_page.dart';
 import 'package:farm_hub/farmer_profile.dart';
 import 'package:farm_hub/inventory_screen.dart';
-import 'package:farm_hub/payment_farmer.dart';
 import 'package:farm_hub/selection_page.dart';
 import 'package:flutter/material.dart';
 
-class FarmAccount extends StatelessWidget {
+class FarmAccount extends StatefulWidget {
   const FarmAccount({super.key});
+
+  @override
+  State<FarmAccount> createState() => _FarmAccountState();
+}
+
+class _FarmAccountState extends State<FarmAccount> {
+  String farmName = "FarmHub";
+  String location = "";
+
+  @override
+  void initState() {
+    super.initState();
+    fetchFarmerDetails();
+  }
+
+  Future<void> fetchFarmerDetails() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      final doc =
+          await FirebaseFirestore.instance
+              .collection('farmers')
+              .doc(user.uid)
+              .get();
+      if (doc.exists) {
+        setState(() {
+          farmName = doc.data()?['farmName'] ?? "My Farm";
+          location = doc.data()?['location'] ?? "";
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -47,20 +81,20 @@ class FarmAccount extends StatelessWidget {
           Column(
             children: [
               const SizedBox(height: 25),
-              const Center(
+              Center(
                 child: Text(
-                  "Nike Farm",
-                  style: TextStyle(
+                  farmName,
+                  style: const TextStyle(
                     fontFamily: "Fredoka",
                     fontWeight: FontWeight.w500,
                     fontSize: 40,
                   ),
                 ),
               ),
-              const Center(
+              Center(
                 child: Text(
-                  "Richie Street",
-                  style: TextStyle(
+                  location,
+                  style: const TextStyle(
                     fontFamily: "Fredoka",
                     fontSize: 20,
                     fontWeight: FontWeight.w500,
@@ -139,13 +173,11 @@ class FarmAccount extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 20),
-
-              // The Container for My Profile, Inventory, Payment Details, etc.
               Container(
                 margin: const EdgeInsets.symmetric(horizontal: 20),
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFB4E197), // Light green background
+                  color: const Color(0xFFB4E197),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Column(
@@ -195,9 +227,12 @@ class FarmAccount extends StatelessWidget {
                   MaterialPageRoute(builder: (context) => PaymentFarmer()),
                 );
               } else if (title == "Logout") {
-                Navigator.push(
+                Navigator.pushAndRemoveUntil(
                   context,
-                  MaterialPageRoute(builder: (context) => SelectionPage()),
+                  MaterialPageRoute(
+                    builder: (context) => const SelectionPage(),
+                  ),
+                  (route) => false,
                 );
               }
             },

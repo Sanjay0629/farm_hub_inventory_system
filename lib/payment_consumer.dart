@@ -61,11 +61,9 @@ class _PaymentConsumerState extends State<PaymentConsumer> {
   }
 
   void _handleSuccess(PaymentSuccessResponse response) async {
-    // Optional: Get the current user ID (if using Firebase Auth)
     String userId = FirebaseAuth.instance.currentUser?.uid ?? 'guest_user';
 
     try {
-      // Save order/payment details to Firestore
       await FirebaseFirestore.instance.collection('orders').add({
         'userId': userId,
         'paymentId': response.paymentId,
@@ -79,6 +77,9 @@ class _PaymentConsumerState extends State<PaymentConsumer> {
                     'price': item['price'],
                     'quantity': item['quantity'],
                     'description': item['description'],
+                    'farmerId':
+                        item['farmerId'] ??
+                        'unknown_farmer', // ✅ added farmerId
                   },
                 )
                 .toList(),

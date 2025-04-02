@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:farm_hub/farm_account.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/gestures.dart';
@@ -9,7 +10,6 @@ class LogInFarmer extends StatefulWidget {
   const LogInFarmer({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
   _LogInFarmer createState() => _LogInFarmer();
 }
 
@@ -21,7 +21,7 @@ class _LogInFarmer extends State<LogInFarmer> {
   bool _obscurePassword = true;
   String? _emailError;
   String? _passwordError;
-  bool _isLoading = false; // Loading indicator
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -45,34 +45,49 @@ class _LogInFarmer extends State<LogInFarmer> {
 
   Future<void> _signIn() async {
     setState(() => _isLoading = true);
+
     try {
-      await _auth.signInWithEmailAndPassword(
+      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
 
+      final uid = userCredential.user!.uid;
+
+      final doc =
+          await FirebaseFirestore.instance.collection('farmers').doc(uid).get();
+
+      if (!doc.exists || (doc.data()?['role'] != 'farmer')) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("❌ Not authorized as Farmer")),
+        );
+        setState(() => _isLoading = false);
+        return;
+      }
+
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text("Login Successful!")));
+      ).showSnackBar(const SnackBar(content: Text("✅ Login Successful!")));
 
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => FarmAccount()),
+        MaterialPageRoute(builder: (context) => const FarmAccount()),
       );
     } on FirebaseAuthException catch (e) {
-      setState(() {
-        if (e.code == 'user-not-found') {
-          _emailError = "No user found for this email.";
-        } else if (e.code == 'wrong-password') {
-          _passwordError = "Incorrect password.";
-        } else {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text("Login failed")));
-        }
-      });
-    } finally {
       setState(() => _isLoading = false);
+      String message = "Login failed";
+
+      if (e.code == 'user-not-found') {
+        message = "No user found for this email.";
+        _emailError = message;
+      } else if (e.code == 'wrong-password') {
+        message = "Incorrect password.";
+        _passwordError = message;
+      }
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("❌ $message")));
     }
   }
 
@@ -108,7 +123,9 @@ class _LogInFarmer extends State<LogInFarmer> {
                 onPressed: () {
                   Navigator.pushReplacement(
                     context,
-                    MaterialPageRoute(builder: (context) => SelectionPage()),
+                    MaterialPageRoute(
+                      builder: (context) => const SelectionPage(),
+                    ),
                   );
                 },
               ),
@@ -131,96 +148,13 @@ class _LogInFarmer extends State<LogInFarmer> {
                       ),
                     ),
                     const SizedBox(height: 30),
-
-                    // Email Field
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 15),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: TextField(
-                        controller: _emailController,
-                        decoration: InputDecoration(
-                          hintText: "Email",
-                          hintStyle: const TextStyle(
-                            fontFamily: 'Fredoka',
-                            color: Colors.grey,
-                          ),
-                          border: InputBorder.none,
-                        ),
-                        keyboardType: TextInputType.emailAddress,
-                      ),
-                    ),
-
-                    if (_emailError != null)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 5, left: 5),
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            _emailError!,
-                            style: const TextStyle(
-                              fontFamily: 'Fredoka',
-                              fontSize: 14,
-                              color: Colors.red,
-                            ),
-                          ),
-                        ),
-                      ),
+                    _buildInputField(_emailController, "Email", false),
+                    if (_emailError != null) _buildErrorText(_emailError!),
                     const SizedBox(height: 10),
-
-                    // Password Field
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 15),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: TextField(
-                        controller: _passwordController,
-                        obscureText: _obscurePassword,
-                        decoration: InputDecoration(
-                          hintText: "Password",
-                          hintStyle: const TextStyle(
-                            fontFamily: 'Fredoka',
-                            color: Colors.grey,
-                          ),
-                          border: InputBorder.none,
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _obscurePassword
-                                  ? Icons.visibility_off
-                                  : Icons.visibility,
-                              color: Colors.grey,
-                            ),
-                            onPressed:
-                                () => setState(
-                                  () => _obscurePassword = !_obscurePassword,
-                                ),
-                          ),
-                        ),
-                      ),
-                    ),
-
+                    _buildInputField(_passwordController, "Password", true),
                     if (_passwordError != null)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 5, left: 5),
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            _passwordError!,
-                            style: const TextStyle(
-                              fontFamily: 'Fredoka',
-                              fontSize: 14,
-                              color: Colors.red,
-                            ),
-                          ),
-                        ),
-                      ),
+                      _buildErrorText(_passwordError!),
                     const SizedBox(height: 20),
-
-                    // Login Button
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF3B5D36),
@@ -292,6 +226,62 @@ class _LogInFarmer extends State<LogInFarmer> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildInputField(
+    TextEditingController controller,
+    String hint,
+    bool isPassword,
+  ) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 15),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: TextField(
+        controller: controller,
+        obscureText: isPassword && _obscurePassword,
+        enabled: !_isLoading,
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: const TextStyle(fontFamily: 'Fredoka', color: Colors.grey),
+          border: InputBorder.none,
+          suffixIcon:
+              isPassword
+                  ? IconButton(
+                    icon: Icon(
+                      _obscurePassword
+                          ? Icons.visibility_off
+                          : Icons.visibility,
+                      color: Colors.grey,
+                    ),
+                    onPressed:
+                        () => setState(
+                          () => _obscurePassword = !_obscurePassword,
+                        ),
+                  )
+                  : null,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildErrorText(String error) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 5, left: 5),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Text(
+          error,
+          style: const TextStyle(
+            fontFamily: 'Fredoka',
+            fontSize: 14,
+            color: Colors.red,
+          ),
+        ),
       ),
     );
   }
