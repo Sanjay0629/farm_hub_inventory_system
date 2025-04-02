@@ -14,29 +14,78 @@ FarmHub is a Flutter-based cross-platform mobile application designed to elimina
 
 ## 📸 Screenshots
 
-### 🔐 Authentication (Consumer & Farmer)
-| Consumer Login | Consumer Signup | Farmer Login | Farmer Signup |
-|----------------|------------------|--------------|----------------|
-| ![Consumer Login](screenshots/consumer_login.png) | ![Consumer Signup](screenshots/consumer_signup.png) | ![Farmer Login](screenshots/farmer_login.png) | ![Farmer Signup](screenshots/farmer_signup.png) |
+### 🔐 Authentication Screens
 
-### 🧑‍🌾 Farmer Side
-| Farmer Dashboard | Inventory Page | Add Product Page |
-|------------------|----------------|------------------|
-| ![Farmer Dashboard](screenshots/farmer_dashboard.png) | ![Inventory](screenshots/inventory.png) | ![Add Product](screenshots/add_product.png) |
+#### Consumer Login
+![Consumer Login](screenshots/consumer_login.png)
 
-### 🛒 Consumer Side
-| Consumer Homepage | Marketplace | Farmer Profile |
-|-------------------|-------------|----------------|
-| ![Consumer Homepage](screenshots/consumer_dashboard.png) | ![Marketplace](screenshots/marketplace.png) | ![Farmer Profile](screenshots/farmer_profile.png) |
+#### Consumer Signup
+![Consumer Signup](screenshots/consumer_signup.png)
 
-### 🗺️ Location & Extras
-| Location Access | Cart Page | Chat Screen |
-|------------------|-----------|--------------|
-| ![Location](screenshots/location_access.png) | ![Cart](screenshots/cart.png) | ![Chat](screenshots/chat.png) |
+#### Farmer Login
+![Farmer Login](screenshots/farmer_login.png)
+
+#### Farmer Signup
+![Farmer Signup](screenshots/farmer_signup.png)
 
 ---
 
-> 📝 Store all screenshots in a `screenshots/` folder in your project root. Make sure the filenames match exactly with those listed above, or adjust the markdown accordingly.
+### 🧑‍🌾 Farmer Side Screens
+
+#### Farmer Dashboard
+![Farmer Dashboard](screenshots/farmer_dashboard.png)
+
+#### Inventory Page
+![Inventory](screenshots/inventory.png)
+
+#### Add Product
+![Add Product](screenshots/add_product.png)
+
+#### My Profile
+![Farmer Profile](screenshots/farmer_profile.png)
+
+#### Payment Details
+![Payment Details](screenshots/payment_details.png)
+
+#### Chat Interface (Farmer)
+![Farmer Chat](screenshots/farmer_chat.png)
+
+---
+
+### 🛒 Consumer Side Screens
+
+#### Home Page
+![Consumer Home](screenshots/consumer_home.png)
+
+#### Marketplace
+![Marketplace](screenshots/marketplace.png)
+
+#### Cart Page
+![Cart](screenshots/cart.png)
+
+#### Checkout & Payment
+![Checkout](screenshots/checkout.png)
+
+#### Order Confirmation
+![Order Confirmation](screenshots/order_confirmation.png)
+
+#### Track Order
+![Track Order](screenshots/track_order.png)
+
+#### Chat Interface (Consumer)
+![Consumer Chat](screenshots/consumer_chat.png)
+
+---
+
+### 📍 Location Access
+
+#### Location Permission Prompt
+![Location Access](screenshots/location_access.png)
+
+---
+
+> 📝 Make sure to save all images in a folder called `screenshots/` at your project root. Rename the screenshots to match the filenames above, or edit the markdown if you use different names.
+
 
 
 ---
