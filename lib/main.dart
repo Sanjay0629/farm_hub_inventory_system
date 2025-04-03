@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  //print("🔥 Firebase Connected Successfully!");
+  //print("Firebase Connected Successfully!");
   runApp(MyApp());
 }
 //options: DefaultFirebaseOptions.currentPlatform
