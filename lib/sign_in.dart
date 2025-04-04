@@ -60,9 +60,7 @@ class _SignInState extends State<SignIn> {
               'createdAt': FieldValue.serverTimestamp(),
             });
 
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text("✅ Sign Up Successful")));
+        _showToast("✅ Sign Up Successful");
 
         Future.delayed(const Duration(seconds: 1), () {
           Navigator.pushReplacement(
@@ -80,11 +78,21 @@ class _SignInState extends State<SignIn> {
           errorMessage = "Password must be at least 6 characters";
         }
 
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text("❌ $errorMessage")));
+        _showToast("❌ $errorMessage", isError: true);
       }
     }
+  }
+
+  void _showToast(String message, {bool isError = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message, style: const TextStyle(fontFamily: 'Fredoka')),
+        backgroundColor: isError ? Colors.redAccent : const Color(0xFFA8DF6E),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      ),
+    );
   }
 
   String? _validateEmail(String value) {
@@ -178,7 +186,6 @@ class _SignInState extends State<SignIn> {
                     ),
 
                     const SizedBox(height: 20),
-
                     ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF3B5D36),

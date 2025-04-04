@@ -1,3 +1,4 @@
+// ✅ Your imports remain the same
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -83,9 +84,7 @@ class _SignInFarmerState extends State<SignInFarmer> {
         'createdAt': FieldValue.serverTimestamp(),
       });
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("✅ Sign Up Successful!")));
+      showStyledSnackBar(context, "✅ Sign Up Successful!");
 
       Future.delayed(const Duration(seconds: 1), () {
         Navigator.pushReplacement(
@@ -100,16 +99,40 @@ class _SignInFarmerState extends State<SignInFarmer> {
       } else if (e.code == 'weak-password') {
         error = "Password must be at least 6 characters.";
       }
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("❌ $error")));
+      showStyledSnackBar(context, "❌ $error");
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("❌ Unexpected Error: $e")));
+      showStyledSnackBar(context, "❌ Unexpected Error: $e");
     } finally {
       setState(() => _isLoading = false);
     }
+  }
+
+  void showStyledSnackBar(BuildContext context, String message) {
+    final snackBar = SnackBar(
+      content: Row(
+        children: [
+          const Icon(Icons.info_outline, color: Colors.white),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              message,
+              style: const TextStyle(
+                fontFamily: 'Fredoka',
+                fontSize: 15,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ],
+      ),
+      backgroundColor: const Color(0xFFA8DF6E),
+      behavior: SnackBarBehavior.floating,
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      duration: const Duration(seconds: 2),
+    );
+
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 
   Widget _buildTextField({
@@ -214,6 +237,7 @@ class _SignInFarmerState extends State<SignInFarmer> {
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
+                        fontFamily: "Fredoka",
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -225,7 +249,7 @@ class _SignInFarmerState extends State<SignInFarmer> {
                         if (value == null || value.isEmpty)
                           return "Email is required";
                         final emailRegExp = RegExp(
-                          r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}",
+                          r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$",
                         );
                         return emailRegExp.hasMatch(value)
                             ? null
@@ -289,6 +313,7 @@ class _SignInFarmerState extends State<SignInFarmer> {
                                 "SIGN UP",
                                 style: TextStyle(
                                   fontSize: 16,
+                                  fontFamily: "Fredoka",
                                   color: Colors.white,
                                 ),
                               ),

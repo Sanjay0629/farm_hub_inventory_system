@@ -63,6 +63,7 @@ class _PaymentConsumerState extends State<PaymentConsumer> {
     String userId = FirebaseAuth.instance.currentUser?.uid ?? 'guest_user';
 
     try {
+      // Store order
       await FirebaseFirestore.instance.collection('orders').add({
         'userId': userId,
         'paymentId': response.paymentId,
@@ -86,16 +87,23 @@ class _PaymentConsumerState extends State<PaymentConsumer> {
         context,
       ).showSnackBar(const SnackBar(content: Text("✅ Payment Successful!")));
 
+      // Extract farmerId from the first item (assuming one farmer per order)
+      String farmerId = cartItems[0]['farmerId'] ?? 'unknown_farmer';
+
       cartItems.clear();
 
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const PaymentSuccessfulPage()),
+        MaterialPageRoute(
+          builder: (context) => PaymentSuccessfulPage(farmerId: farmerId),
+        ),
       );
     } catch (e) {
       print("Firestore Save Error: $e");
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("⚠️ Payment saved, but failed to store order.")),
+        const SnackBar(
+          content: Text("⚠️ Payment saved, but failed to store order."),
+        ),
       );
     }
   }

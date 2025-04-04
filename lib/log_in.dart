@@ -1,3 +1,4 @@
+// keep your imports as is
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:farm_hub/location_page.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -32,12 +33,9 @@ class _LogIn extends State<LogIn> {
   }
 
   Future<void> _loginUser() async {
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
     try {
-      // 🔐 Firebase Auth Sign In
       UserCredential userCredential = await FirebaseAuth.instance
           .signInWithEmailAndPassword(
             email: _emailController.text.trim(),
@@ -46,14 +44,8 @@ class _LogIn extends State<LogIn> {
 
       final uid = userCredential.user!.uid;
 
-      // 📦 Check Firestore "users" collection
       final userDoc =
-          await FirebaseFirestore.instance
-              .collection(
-                'users',
-              ) // <-- Make sure your consumers are stored here
-              .doc(uid)
-              .get();
+          await FirebaseFirestore.instance.collection('users').doc(uid).get();
 
       if (!userDoc.exists) {
         setState(() {
@@ -61,20 +53,13 @@ class _LogIn extends State<LogIn> {
           _emailError = "This account is not a consumer.";
         });
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("⚠️ This account is not a consumer."),
-            backgroundColor: Colors.red,
-          ),
-        );
+        _showToast("⚠️ This account is not a consumer.", isError: true);
         return;
       }
 
-      // ✅ Success - Navigate to Location Page
       if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
+        _showToast("✅ Login successful!");
+        setState(() => _isLoading = false);
 
         Navigator.pushReplacement(
           context,
@@ -82,16 +67,17 @@ class _LogIn extends State<LogIn> {
         );
       }
     } on FirebaseAuthException catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
+      setState(() => _isLoading = false);
 
       if (e.code == 'user-not-found') {
         _emailError = "No user found for this email.";
+        _showToast("❌ No user found for this email.", isError: true);
       } else if (e.code == 'wrong-password') {
         _passwordError = "Incorrect password.";
+        _showToast("❌ Incorrect password.", isError: true);
       } else {
         _emailError = "Login failed. Please try again.";
+        _showToast("❌ Login failed. Please try again.", isError: true);
       }
     }
   }
@@ -120,6 +106,18 @@ class _LogIn extends State<LogIn> {
     if (value.isEmpty) return "Password is required";
     if (value.length < 6) return "Password must be at least 6 characters";
     return null;
+  }
+
+  void _showToast(String message, {bool isError = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message, style: const TextStyle(fontFamily: 'Fredoka')),
+        backgroundColor: isError ? Colors.redAccent : const Color(0xFFA8DF6E),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      ),
+    );
   }
 
   @override
@@ -286,11 +284,10 @@ class _LogIn extends State<LogIn> {
                               : Icons.visibility,
                           color: Colors.grey,
                         ),
-                        onPressed: () {
-                          setState(() {
-                            _obscurePassword = !_obscurePassword;
-                          });
-                        },
+                        onPressed:
+                            () => setState(
+                              () => _obscurePassword = !_obscurePassword,
+                            ),
                       )
                       : null,
             ),

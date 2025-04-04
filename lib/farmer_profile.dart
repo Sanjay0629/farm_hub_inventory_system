@@ -8,17 +8,37 @@ class FarmerProfile extends StatefulWidget {
   _FarmerProfileState createState() => _FarmerProfileState();
 }
 
-class _FarmerProfileState extends State<FarmerProfile> {
+class _FarmerProfileState extends State<FarmerProfile>
+    with TickerProviderStateMixin {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
   final TextEditingController farmNameController = TextEditingController();
   final TextEditingController locationController = TextEditingController();
   final TextEditingController registrationController = TextEditingController();
 
+  late AnimationController _toastController;
+  late Animation<Offset> _toastAnimation;
+
   @override
   void initState() {
     super.initState();
     fetchFarmerData();
+
+    _toastController = AnimationController(
+      duration: const Duration(milliseconds: 400),
+      vsync: this,
+    );
+
+    _toastAnimation = Tween<Offset>(
+      begin: const Offset(0, 1),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _toastController, curve: Curves.easeOut));
+  }
+
+  @override
+  void dispose() {
+    _toastController.dispose();
+    super.dispose();
   }
 
   Future<void> fetchFarmerData() async {
@@ -55,18 +75,75 @@ class _FarmerProfileState extends State<FarmerProfile> {
               'registrationNumber': registrationController.text.trim(),
             }, SetOptions(merge: true));
 
-        if (mounted) {
+        showStyledToast(context, "Profile updated successfully!");
+
+        Future.delayed(const Duration(milliseconds: 1500), () {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => const FarmAccount()),
           );
-        }
+        });
       } catch (e) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text("Update failed: $e")));
+        showStyledToast(context, "❌ Update failed: $e", isError: true);
       }
     }
+  }
+
+  void showStyledToast(
+    BuildContext context,
+    String message, {
+    bool isError = false,
+  }) {
+    _toastController.forward(from: 0.0);
+    final overlay = Overlay.of(context);
+    final overlayEntry = OverlayEntry(
+      builder:
+          (_) => Positioned(
+            bottom: 30,
+            left: 20,
+            right: 20,
+            child: SlideTransition(
+              position: _toastAnimation,
+              child: Material(
+                color: isError ? Colors.redAccent : const Color(0xFFA8DF6E),
+                borderRadius: BorderRadius.circular(15),
+                elevation: 6,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 12,
+                    horizontal: 16,
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        isError
+                            ? Icons.error_outline
+                            : Icons.check_circle_outline,
+                        color: Colors.white,
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          message,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontFamily: 'Fredoka',
+                            fontSize: 15,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+    );
+
+    overlay.insert(overlayEntry);
+    Future.delayed(const Duration(seconds: 2), () {
+      overlayEntry.remove();
+    });
   }
 
   @override

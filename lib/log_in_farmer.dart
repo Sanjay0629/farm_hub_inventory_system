@@ -10,10 +10,10 @@ class LogInFarmer extends StatefulWidget {
   const LogInFarmer({super.key});
 
   @override
-  _LogInFarmer createState() => _LogInFarmer();
+  State<LogInFarmer> createState() => _LogInFarmer();
 }
 
-class _LogInFarmer extends State<LogInFarmer> {
+class _LogInFarmer extends State<LogInFarmer> with TickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final TextEditingController _emailController = TextEditingController();
@@ -23,6 +23,9 @@ class _LogInFarmer extends State<LogInFarmer> {
   String? _passwordError;
   bool _isLoading = false;
 
+  late AnimationController _controller;
+  late Animation<Offset> _offsetAnimation;
+
   @override
   void initState() {
     super.initState();
@@ -30,6 +33,21 @@ class _LogInFarmer extends State<LogInFarmer> {
     _passwordController.addListener(
       () => setState(() => _passwordError = null),
     );
+
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 400),
+      vsync: this,
+    );
+    _offsetAnimation = Tween<Offset>(
+      begin: const Offset(0.0, 1.0),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
   void _validateFields() {
@@ -58,21 +76,19 @@ class _LogInFarmer extends State<LogInFarmer> {
           await FirebaseFirestore.instance.collection('farmers').doc(uid).get();
 
       if (!doc.exists || (doc.data()?['role'] != 'farmer')) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("❌ Not authorized as Farmer")),
-        );
+        _showToast("❌ Not authorized as Farmer", isError: true);
         setState(() => _isLoading = false);
         return;
       }
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("✅ Login Successful!")));
+      _showToast("Login Successful!", isError: false);
 
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const FarmAccount()),
-      );
+      Future.delayed(const Duration(milliseconds: 1500), () {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const FarmAccount()),
+        );
+      });
     } on FirebaseAuthException catch (e) {
       setState(() => _isLoading = false);
       String message = "Login failed";
@@ -85,10 +101,62 @@ class _LogInFarmer extends State<LogInFarmer> {
         _passwordError = message;
       }
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("❌ $message")));
+      _showToast("❌ $message", isError: true);
     }
+  }
+
+  void _showToast(String message, {bool isError = false}) {
+    _controller.forward(from: 0.0);
+
+    final overlay = Overlay.of(context);
+    final overlayEntry = OverlayEntry(
+      builder:
+          (_) => Positioned(
+            bottom: 30,
+            left: 20,
+            right: 20,
+            child: SlideTransition(
+              position: _offsetAnimation,
+              child: Material(
+                color: isError ? Colors.redAccent : const Color(0xFFA8DF6E),
+                borderRadius: BorderRadius.circular(15),
+                elevation: 6,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 12,
+                    horizontal: 16,
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        isError
+                            ? Icons.error_outline
+                            : Icons.check_circle_outline,
+                        color: Colors.white,
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          message,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontFamily: 'Fredoka',
+                            fontSize: 15,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+    );
+
+    overlay.insert(overlayEntry);
+    Future.delayed(const Duration(seconds: 2), () {
+      overlayEntry.remove();
+    });
   }
 
   String? _validateEmail(String value) {
@@ -215,7 +283,7 @@ class _LogInFarmer extends State<LogInFarmer> {
                               Navigator.pushReplacement(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => const SignInFarmer(),
+                                  builder: (_) => const SignInFarmer(),
                                 ),
                               );
                             },

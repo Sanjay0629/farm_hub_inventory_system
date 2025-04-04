@@ -50,7 +50,6 @@ class _BrowseFarmsPageState extends State<BrowseFarmsPage> {
       desiredAccuracy: LocationAccuracy.high,
     );
 
-    // ✅ Store and Print consumer coordinates
     userLat = position.latitude;
     userLng = position.longitude;
 
@@ -236,13 +235,38 @@ class _BrowseFarmsPageState extends State<BrowseFarmsPage> {
                       );
                     }
 
-                    return FarmCard(
-                      name: farmData['farmName'] ?? 'Unknown',
-                      location: farmData['location'] ?? '',
-                      rating: 4,
-                      distance: distance,
-                      imagePath: 'assets/images/farmer1.png',
-                      farmerId: farmData['uid'] ?? '',
+                    final farmerId = farmData['uid'] ?? '';
+
+                    return FutureBuilder<QuerySnapshot>(
+                      future:
+                          FirebaseFirestore.instance
+                              .collection('farmers')
+                              .doc(farmerId)
+                              .collection('ratings')
+                              .get(),
+                      builder: (context, ratingSnapshot) {
+                        double avgRating = 0;
+
+                        if (ratingSnapshot.hasData) {
+                          final ratings = ratingSnapshot.data!.docs;
+                          if (ratings.isNotEmpty) {
+                            final total = ratings.fold(
+                              0,
+                              (sum, doc) => sum + (doc['rating'] ?? 0) as int,
+                            );
+                            avgRating = total / ratings.length;
+                          }
+                        }
+
+                        return FarmCard(
+                          name: farmData['farmName'] ?? 'Unknown',
+                          location: farmData['location'] ?? '',
+                          rating: avgRating,
+                          distance: distance,
+                          imagePath: 'assets/images/farmer1.png',
+                          farmerId: farmerId,
+                        );
+                      },
                     );
                   },
                 );
@@ -258,7 +282,7 @@ class _BrowseFarmsPageState extends State<BrowseFarmsPage> {
 class FarmCard extends StatelessWidget {
   final String name;
   final String location;
-  final int rating;
+  final double rating;
   final double distance;
   final String imagePath;
   final String farmerId;
@@ -321,7 +345,7 @@ class FarmCard extends StatelessWidget {
               return Icon(
                 Icons.star,
                 size: 16,
-                color: index < rating ? Colors.orange : Colors.grey,
+                color: index < rating.round() ? Colors.orange : Colors.grey,
               );
             }),
           ),

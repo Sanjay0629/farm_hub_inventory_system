@@ -1,10 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:farm_hub/farmer_orders_page.dart';
-import 'package:farm_hub/farmer_profile.dart';
-import 'package:farm_hub/inventory_screen.dart';
-import 'package:farm_hub/selection_page.dart';
 import 'package:flutter/material.dart';
+import 'package:farm_hub/selection_page.dart';
+import 'package:farm_hub/farmer_profile.dart';
+import 'package:farm_hub/farmer_orders_page.dart';
+import 'package:farm_hub/inventory_screen.dart';
 
 class FarmAccount extends StatefulWidget {
   const FarmAccount({super.key});
@@ -18,211 +18,398 @@ class _FarmAccountState extends State<FarmAccount> {
   String location = "";
   double totalEarnings = 0.0;
   int totalOrders = 0;
+  double averageRating = 0.0;
 
   @override
   void initState() {
     super.initState();
-    fetchFarmerDetails();
-    calculateTotalEarnings();
-    calculateOrderCount();
+    fetchDetails();
   }
 
-  Future<void> fetchFarmerDetails() async {
+  Future<void> fetchDetails() async {
     final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      final doc =
-          await FirebaseFirestore.instance
-              .collection('farmers')
-              .doc(user.uid)
-              .get();
-      if (doc.exists) {
-        setState(() {
-          farmName = doc.data()?['farmName'] ?? "My Farm";
-          location = doc.data()?['location'] ?? "";
-        });
-      }
-    }
-  }
+    final uid = user?.uid;
+    if (uid == null) return;
 
-  Future<void> calculateTotalEarnings() async {
+    final doc =
+        await FirebaseFirestore.instance.collection('farmers').doc(uid).get();
+    final orders = await FirebaseFirestore.instance.collection('orders').get();
+    final ratingsSnapshot =
+        await FirebaseFirestore.instance
+            .collection('farmers')
+            .doc(uid)
+            .collection('ratings')
+            .get();
+
     double earnings = 0.0;
-    final farmerId = FirebaseAuth.instance.currentUser?.uid ?? '';
+    int orderCount = 0;
+    List<int> ratings = [];
 
-    final snapshot =
-        await FirebaseFirestore.instance.collection('orders').get();
-    for (var doc in snapshot.docs) {
-      final data = doc.data();
-      final items = data['items'] as List<dynamic>;
+    for (var order in orders.docs) {
+      final items = (order['items'] as List);
       for (var item in items) {
-        if (item['farmerId'] == farmerId) {
-          final priceStr =
-              (item['price'] ?? '0')
-                  .toString()
-                  .replaceAll('₹', '')
-                  .replaceAll('/kg', '')
-                  .trim();
-          final double price = double.tryParse(priceStr) ?? 0;
-          final int quantity = int.tryParse(item['quantity'] ?? '0') ?? 0;
-          earnings += price * quantity;
+        if (item['farmerId'] == uid) {
+          final price =
+              double.tryParse(
+                item['price']
+                    .toString()
+                    .replaceAll("₹", "")
+                    .replaceAll("/kg", "")
+                    .trim(),
+              ) ??
+              0;
+          final qty = int.tryParse(item['quantity'] ?? "0") ?? 0;
+          earnings += price * qty;
+          orderCount++;
         }
       }
     }
 
-    setState(() => totalEarnings = earnings);
-  }
-
-  Future<void> calculateOrderCount() async {
-    int orders = 0;
-    final farmerId = FirebaseAuth.instance.currentUser?.uid ?? '';
-
-    final snapshot =
-        await FirebaseFirestore.instance.collection('orders').get();
-    for (var doc in snapshot.docs) {
-      final data = doc.data();
-      final items = data['items'] as List<dynamic>;
-      if (items.any((item) => item['farmerId'] == farmerId)) {
-        orders++;
-      }
+    for (var r in ratingsSnapshot.docs) {
+      ratings.add((r['rating'] ?? 0).toInt());
     }
 
-    setState(() => totalOrders = orders);
+    setState(() {
+      farmName = doc['farmName'] ?? 'My Farm';
+      location = doc['location'] ?? '';
+      totalEarnings = earnings;
+      totalOrders = orderCount;
+      averageRating =
+          ratings.isEmpty
+              ? 0.0
+              : ratings.reduce((a, b) => a + b) / ratings.length;
+    });
   }
 
-  Future<void> _deleteAccount(BuildContext context) async {
+  Future<void> _showDeleteAccountDialog() async {
     final user = FirebaseAuth.instance.currentUser;
-    String password = '';
+    final TextEditingController _passwordController = TextEditingController();
 
-    await showDialog(
+    showDialog(
       context: context,
-      builder: (ctx) {
-        final _passwordController = TextEditingController();
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          title: const Text(
-            "Delete Account",
-            style: TextStyle(
-              fontFamily: "Fredoka",
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
+      barrierDismissible: false,
+      builder:
+          (ctx) => Dialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(25),
             ),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                "Enter your password to confirm deletion.",
-                style: TextStyle(fontFamily: "Fredoka", fontSize: 16),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _passwordController,
-                obscureText: true,
-                decoration: InputDecoration(
-                  hintText: "Password",
-                  hintStyle: const TextStyle(fontFamily: "Fredoka"),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
+            backgroundColor: const Color(0xFFEFFFE9),
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.warning_amber_rounded,
+                    size: 60,
+                    color: Colors.redAccent,
                   ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 10,
+                  const SizedBox(height: 15),
+                  const Text(
+                    "Delete Account?",
+                    style: TextStyle(
+                      fontFamily: "Fredoka",
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-              ),
-            ],
-          ),
-          actionsPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 10,
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text(
-                "Cancel",
-                style: TextStyle(
-                  fontFamily: "Fredoka",
-                  color: Colors.grey,
-                  fontSize: 16,
-                ),
+                  const SizedBox(height: 10),
+                  const Text(
+                    "Please confirm your password to delete your FarmHub account. This action cannot be undone.",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: "Fredoka",
+                      fontSize: 15,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  TextField(
+                    controller: _passwordController,
+                    obscureText: true,
+                    decoration: InputDecoration(
+                      hintText: "Enter Password",
+                      hintStyle: const TextStyle(fontFamily: 'Fredoka'),
+                      filled: true,
+                      fillColor: Colors.white,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.black,
+                            textStyle: const TextStyle(fontFamily: "Fredoka"),
+                            side: const BorderSide(color: Colors.grey),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          onPressed: () => Navigator.of(ctx).pop(),
+                          child: const Text("Cancel"),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.redAccent,
+                            foregroundColor: Colors.white,
+                            textStyle: const TextStyle(fontFamily: "Fredoka"),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          onPressed: () async {
+                            final password = _passwordController.text.trim();
+                            if (password.isEmpty || user == null) return;
+
+                            try {
+                              final cred = EmailAuthProvider.credential(
+                                email: user.email!,
+                                password: password,
+                              );
+                              await user.reauthenticateWithCredential(cred);
+
+                              await FirebaseFirestore.instance
+                                  .collection('farmers')
+                                  .doc(user.uid)
+                                  .delete();
+
+                              final products =
+                                  await FirebaseFirestore.instance
+                                      .collection('products')
+                                      .where('farmerId', isEqualTo: user.uid)
+                                      .get();
+
+                              for (var doc in products.docs) {
+                                await doc.reference.delete();
+                              }
+
+                              await user.delete();
+
+                              Navigator.of(ctx).pop();
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    "✅ Account deleted successfully!",
+                                    style: TextStyle(fontFamily: "Fredoka"),
+                                  ),
+                                  backgroundColor: Color(0xFFA8DF6E),
+                                  behavior: SnackBarBehavior.floating,
+                                  margin: EdgeInsets.symmetric(
+                                    horizontal: 20,
+                                    vertical: 10,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.all(
+                                      Radius.circular(12),
+                                    ),
+                                  ),
+                                ),
+                              );
+
+                              Navigator.pushAndRemoveUntil(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const SelectionPage(),
+                                ),
+                                (_) => false,
+                              );
+                            } catch (e) {
+                              Navigator.of(ctx).pop();
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: const Text(
+                                    "❌ Error deleting account. Check password.",
+                                    style: TextStyle(fontFamily: "Fredoka"),
+                                  ),
+                                  backgroundColor: Colors.redAccent,
+                                  behavior: SnackBarBehavior.floating,
+                                  margin: const EdgeInsets.symmetric(
+                                    horizontal: 20,
+                                    vertical: 10,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                              );
+                            }
+                          },
+                          child: const Text("Delete"),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
-            ElevatedButton(
-              onPressed: () {
-                password = _passwordController.text;
-                Navigator.of(ctx).pop();
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
-                ),
-              ),
-              child: const Text(
-                "Confirm",
-                style: TextStyle(fontFamily: "Fredoka", fontSize: 16),
-              ),
-            ),
-          ],
-        );
-      },
+          ),
     );
+  }
 
-    if (password.isEmpty || user == null) return;
+  Future<void> _showLogoutDialog() async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder:
+          (ctx) => Dialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(25),
+            ),
+            backgroundColor: const Color(0xFFEFFFE9),
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.logout, size: 60, color: Colors.red),
+                  const SizedBox(height: 15),
+                  const Text(
+                    "Logout Confirmation",
+                    style: TextStyle(
+                      fontFamily: "Fredoka",
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  const Text(
+                    "Are you sure you want to log out of your FarmHub account?",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontFamily: "Fredoka",
+                      fontSize: 15,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.black,
+                            textStyle: const TextStyle(fontFamily: "Fredoka"),
+                            side: const BorderSide(color: Colors.grey),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          onPressed: () => Navigator.of(ctx).pop(),
+                          child: const Text("Cancel"),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red,
+                            foregroundColor: Colors.white,
+                            textStyle: const TextStyle(fontFamily: "Fredoka"),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          onPressed: () {
+                            Navigator.of(ctx).pop();
 
-    try {
-      final cred = EmailAuthProvider.credential(
-        email: user.email!,
-        password: password,
-      );
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  "✅ Logged out successfully!",
+                                  style: TextStyle(fontFamily: "Fredoka"),
+                                ),
+                                backgroundColor: Color(0xFFA8DF6E),
+                                behavior: SnackBarBehavior.floating,
+                                margin: EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 10,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.all(
+                                    Radius.circular(12),
+                                  ),
+                                ),
+                              ),
+                            );
 
-      await user.reauthenticateWithCredential(cred);
-
-      // Delete farmer document
-      await FirebaseFirestore.instance
-          .collection('farmers')
-          .doc(user.uid)
-          .delete();
-
-      // Delete farmer products
-      final productsSnapshot =
-          await FirebaseFirestore.instance
-              .collection('products')
-              .where('farmerId', isEqualTo: user.uid)
-              .get();
-
-      for (var doc in productsSnapshot.docs) {
-        await doc.reference.delete();
-      }
-
-      await user.delete();
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("✅ Account deleted successfully!")),
-      );
-
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => const SelectionPage()),
-        (route) => false,
-      );
-    } catch (e) {
-      print("Delete error: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            "⚠️ Error deleting account. Please check your password.",
+                            Future.delayed(
+                              const Duration(milliseconds: 1500),
+                              () {
+                                Navigator.pushAndRemoveUntil(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => const SelectionPage(),
+                                  ),
+                                  (_) => false,
+                                );
+                              },
+                            );
+                          },
+                          child: const Text("Logout"),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
           ),
+    );
+  }
+
+  Widget _buildMenuItem(IconData icon, String title) {
+    return Column(
+      children: [
+        ListTile(
+          leading: Icon(icon, color: Colors.black),
+          title: Text(
+            title,
+            style: const TextStyle(
+              fontFamily: "Fredoka",
+              fontSize: 20,
+              fontWeight: FontWeight.w400,
+            ),
+          ),
+          trailing: const Icon(Icons.arrow_forward_ios),
+          onTap: () {
+            if (title == "My Profile") {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => FarmerProfile()),
+              );
+            } else if (title == "Inventory") {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => InventoryScreen()),
+              );
+            } else if (title == "Payment Details") {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => FarmerPaymentsPage()),
+              );
+            } else if (title == "Logout") {
+              _showLogoutDialog();
+            } else if (title == "Delete Account") {
+              _showDeleteAccountDialog();
+            }
+          },
         ),
-      );
-    }
+        if (title != "Delete Account")
+          const Divider(height: 1, color: Colors.black26),
+      ],
+    );
   }
 
   @override
@@ -263,29 +450,23 @@ class _FarmAccountState extends State<FarmAccount> {
               backgroundColor: const Color(0xBFEAE86C),
             ),
           ),
-
           Column(
             children: [
               const SizedBox(height: 25),
-              Center(
-                child: Text(
-                  farmName,
-                  style: const TextStyle(
-                    fontFamily: "Fredoka",
-                    fontWeight: FontWeight.w500,
-                    fontSize: 40,
-                  ),
+              Text(
+                farmName,
+                style: const TextStyle(
+                  fontSize: 40,
+                  fontFamily: "Fredoka",
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-              Center(
-                child: Text(
-                  location,
-                  style: const TextStyle(
-                    fontFamily: "Fredoka",
-                    fontSize: 20,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.grey,
-                  ),
+              Text(
+                location,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontFamily: "Fredoka",
+                  color: Colors.grey,
                 ),
               ),
               const SizedBox(height: 15),
@@ -298,11 +479,25 @@ class _FarmAccountState extends State<FarmAccount> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(5, (index) {
                   return Icon(
-                    index < 4 ? Icons.star : Icons.star_half,
-                    color: Colors.orange,
+                    Icons.star,
+                    color:
+                        index < averageRating.round()
+                            ? Colors.orange
+                            : Colors.grey,
                     size: 20,
                   );
                 }),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                averageRating > 0
+                    ? "${averageRating.toStringAsFixed(1)} stars"
+                    : "No ratings yet",
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontFamily: "Fredoka",
+                  color: Colors.black54,
+                ),
               ),
               const SizedBox(height: 15),
               Row(
@@ -313,28 +508,21 @@ class _FarmAccountState extends State<FarmAccount> {
                       const Text(
                         "Orders",
                         style: TextStyle(
-                          fontWeight: FontWeight.w500,
-                          fontFamily: "Fredoka",
                           fontSize: 24,
+                          fontFamily: "Fredoka",
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
-                      const SizedBox(height: 2),
                       Text(
                         "$totalOrders",
                         style: const TextStyle(
                           fontSize: 20,
                           fontFamily: "Fredoka",
-                          fontWeight: FontWeight.w400,
                         ),
                       ),
                     ],
                   ),
-                  Container(
-                    height: 80,
-                    width: 2,
-                    color: Colors.grey,
-                    margin: const EdgeInsets.symmetric(horizontal: 20),
-                  ),
+                  const SizedBox(width: 20),
                   Column(
                     children: [
                       const Text(
@@ -345,13 +533,11 @@ class _FarmAccountState extends State<FarmAccount> {
                           fontWeight: FontWeight.w500,
                         ),
                       ),
-                      const SizedBox(height: 2),
                       Text(
                         "₹${totalEarnings.toStringAsFixed(0)}",
                         style: const TextStyle(
-                          fontFamily: "Fredoka",
                           fontSize: 20,
-                          fontWeight: FontWeight.w400,
+                          fontFamily: "Fredoka",
                         ),
                       ),
                     ],
@@ -368,15 +554,11 @@ class _FarmAccountState extends State<FarmAccount> {
                 ),
                 child: Column(
                   children: [
-                    _buildMenuItem(Icons.person, "My Profile", context),
-                    _buildMenuItem(Icons.shopping_cart, "Inventory", context),
-                    _buildMenuItem(Icons.payment, "Payment Details", context),
-                    _buildMenuItem(Icons.logout, "Logout", context),
-                    _buildMenuItem(
-                      Icons.delete_forever,
-                      "Delete Account",
-                      context,
-                    ),
+                    _buildMenuItem(Icons.person, "My Profile"),
+                    _buildMenuItem(Icons.shopping_cart, "Inventory"),
+                    _buildMenuItem(Icons.payment, "Payment Details"),
+                    _buildMenuItem(Icons.logout, "Logout"),
+                    _buildMenuItem(Icons.delete_forever, "Delete Account"),
                   ],
                 ),
               ),
@@ -384,53 +566,6 @@ class _FarmAccountState extends State<FarmAccount> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildMenuItem(IconData icon, String title, BuildContext context) {
-    return Column(
-      children: [
-        ListTile(
-          leading: Icon(icon, color: Colors.black),
-          title: Text(
-            title,
-            style: const TextStyle(
-              fontWeight: FontWeight.w400,
-              fontFamily: "Fredoka",
-              fontSize: 20,
-            ),
-          ),
-          trailing: const Icon(Icons.arrow_forward_ios),
-          onTap: () {
-            if (title == "My Profile") {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => FarmerProfile()),
-              );
-            } else if (title == "Inventory") {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => InventoryScreen()),
-              );
-            } else if (title == "Payment Details") {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => FarmerPaymentsPage()),
-              );
-            } else if (title == "Logout") {
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (context) => const SelectionPage()),
-                (route) => false,
-              );
-            } else if (title == "Delete Account") {
-              _deleteAccount(context);
-            }
-          },
-        ),
-        if (title != "Delete Account")
-          const Divider(height: 1, color: Colors.black26),
-      ],
     );
   }
 }
