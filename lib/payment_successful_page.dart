@@ -13,6 +13,7 @@ class PaymentSuccessfulPage extends StatefulWidget {
 }
 
 class _PaymentSuccessfulPageState extends State<PaymentSuccessfulPage> {
+  // ignore: unused_field
   bool _hasRated = false;
 
   @override
